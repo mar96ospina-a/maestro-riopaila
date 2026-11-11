@@ -1,0 +1,4108 @@
+<!doctype html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Maestro de Suertes - Riopaila Agrícola">
+  <link rel="manifest" href="manifest.json">
+  <title>Riopaila Agrícola – Maestro</title>
+  <!-- Todo desde el propio origen: esta app se abre en lote, sin señal. Nada de CDN.
+       Ver "Nada de recursos externos" en CLAUDE.md antes de agregar un <script src="http...">. -->
+  <script src="vendor/tailwind.js"></script>
+  <link href="vendor/fonts.css" rel="stylesheet">
+  <style>
+    :root {
+      --font-manrope: 'Manrope', sans-serif;
+
+      /* Dark Theme (Default) */
+      --bg-body: #020617;
+      /* slate-950 */
+      --text-main: #f1f5f9;
+      /* slate-100 */
+      --text-muted: #94a3b8;
+      /* slate-400 */
+      /* Liquid Glass Dark */
+      --glass-bg: rgba(15, 23, 42, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      /* Finer border */
+      --glass-shadow: rgba(0, 0, 0, 0.2);
+      --glass-inner-shadow: rgba(255, 255, 255, 0.03);
+      --header-bg: rgba(15, 23, 42, 0.85);
+      --input-bg: rgba(15, 23, 42, 0.5);
+      --input-text: #ffffff;
+      --table-header-bg: rgba(15, 23, 42, 0.95);
+      --table-header-text: #2dd4bf;
+      /* teal-400 */
+
+      --row-hover: rgba(255, 255, 255, 0.04);
+      --modal-bg: rgba(15, 23, 42, 0.85);
+
+      --success-bg: rgba(16, 185, 129, 0.1);
+      /* emerald-500/10 */
+      --success-text: #34d399;
+      /* emerald-400 */
+
+      /* Sticky first column (dark) - must be opaque to block scrolling content behind */
+      --sticky-header-bg: #0f172a;
+      --sticky-body-bg: #0b1220;
+      --sticky-body-hover-bg: #162032;
+
+      --aurora-opacity: 0.6;
+      --aurora-blend: screen;
+    }
+
+    /* Light Theme Override */
+    /* Light theme: clean "paper" look — solid white surfaces, no aurora,
+       no backdrop blur (the blur does nothing over a uniform background
+       and only costs paint). Subtle borders + soft shadows give depth. */
+    :root.light {
+      --bg-body: #fafbfc;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+
+      /* Solid panels (no glass effect — uniform light bg makes blur useless) */
+      --glass-bg: #ffffff;
+      --glass-border: rgba(15, 23, 42, 0.08);
+      --glass-shadow: rgba(15, 23, 42, 0.06);
+      --glass-inner-shadow: transparent;
+
+      --header-bg: rgba(255, 255, 255, 0.92);
+      --input-bg: #ffffff;
+      --input-text: #0f172a;
+
+      --table-header-bg: #f8fafc;
+      --table-header-text: #0d9488;
+
+      --row-hover: rgba(15, 23, 42, 0.035);
+      --modal-bg: #ffffff;
+
+      --success-bg: rgba(16, 185, 129, 0.1);
+      --success-text: #059669;
+
+      /* Sticky identifier column (light) */
+      --sticky-header-bg: #f1f5f9;
+      --sticky-body-bg: #ffffff;
+      --sticky-body-hover-bg: #f1f5f9;
+
+      /* Aurora is fully off in light mode */
+      --aurora-opacity: 0;
+      --aurora-blend: normal;
+    }
+
+    /* --- Temporada: Halloween (24 de octubre – 2 de noviembre) -----------------
+       Sobrio a propósito: solo se mueve el acento, de teal a ámbar. Nada de
+       animaciones ni tipografías nuevas — esto se consulta a pleno sol en el lote
+       y la legibilidad manda sobre el disfraz. Los tonos se eligieron por
+       contraste sobre cada fondo: #fbbf24 sobre el encabezado oscuro (≈10:1) y
+       #b45309 en tema claro (≈5:1), los dos por encima del mínimo de 4,5:1.
+       Los colores de estado (verde de éxito, ámbar de aviso, rojo de error) NO
+       cambian: significan algo y confundirlos sería peor que no celebrar nada.
+       Se enciende y se apaga sola; ver aplicarTemporada(). */
+    :root.temporada-halloween {
+      --table-header-text: #fbbf24;
+    }
+
+    :root.temporada-halloween.light {
+      --table-header-text: #b45309;
+    }
+
+    :root.temporada-halloween .text-teal-400,
+    :root.temporada-halloween .riomap-link {
+      color: #fbbf24;
+    }
+
+    :root.temporada-halloween.light .text-teal-400,
+    :root.temporada-halloween.light .riomap-link {
+      color: #b45309;
+    }
+
+    :root.temporada-halloween .riomap-icon {
+      color: #f59e0b;
+    }
+
+    :root.temporada-halloween .riomap-icon:hover {
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+    }
+
+    :root.temporada-halloween.light .riomap-icon,
+    :root.temporada-halloween.light .riomap-icon:hover {
+      color: #b45309;
+    }
+
+    /* La calabaza solo existe en temporada. Dibujada, no emoji: mismo trazo y
+       mismo peso que los íconos de la app. */
+    .calabaza {
+      display: none;
+      flex-shrink: 0;
+      color: #f59e0b;
+    }
+
+    :root.temporada-halloween .calabaza {
+      display: block;
+    }
+
+    :root.temporada-halloween.light .calabaza {
+      color: #b45309;
+    }
+
+    /* Stop animating + remove the blur cost in light mode */
+    :root.light .blob {
+      display: none;
+    }
+    :root.light .glass-panel,
+    :root.light .glass-header,
+    :root.light .glass-input,
+    :root.light .filter-multi-popover,
+    :root.light #filterDrawer,
+    :root.light #bottomNav {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    /* Slightly more lift on cards so they read as "above" the page */
+    :root.light .glass-panel {
+      box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.04),
+        0 4px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    /* Hide the dark-tint overlay from the dynamic background wrapper */
+    :root.light .bg-slate-950\/20 {
+      display: none !important;
+    }
+
+    /* Replace the heavy shadow-2xl on the table container */
+    :root.light #tableContainer {
+      box-shadow:
+        0 1px 2px rgba(15, 23, 42, 0.05),
+        0 8px 24px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    /* Modal panel: soft elevation instead of shadow-2xl */
+    :root.light #detailModal .shadow-2xl {
+      box-shadow:
+        0 2px 6px rgba(15, 23, 42, 0.06),
+        0 18px 48px rgba(15, 23, 42, 0.12) !important;
+    }
+
+    /* Filter trigger pill on the side */
+    :root.light #filterTrigger {
+      box-shadow: -3px 2px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    body {
+      font-family: var(--font-manrope);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s;
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* --- Aurora Background Animation (Shared) --- */
+    .blob {
+      position: absolute;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: var(--aurora-opacity);
+      mix-blend-mode: var(--aurora-blend);
+      transition: opacity 0.5s;
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      animation: fluidMove 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fluidMove {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      50% {
+        transform: translate(20px, -20px) rotate(5deg);
+      }
+
+      100% {
+        transform: translate(-15px, 15px) rotate(-5deg);
+      }
+    }
+
+    /* --- Neoskeuomorphic Glass --- */
+    .glass-panel {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 8px 32px 0 var(--glass-shadow),
+        inset 0 1px 0 var(--glass-inner-shadow);
+      transition: background 0.3s, border 0.3s, box-shadow 0.3s;
+    }
+
+    .hover-row:hover {
+      background-color: var(--row-hover);
+    }
+
+    .glass-header {
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      transition: background 0.3s, border 0.3s;
+    }
+
+    .glass-input {
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Custom Table Scrollbar */
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(128, 128, 128, 0.3);
+      border-radius: 10px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(128, 128, 128, 0.5);
+    }
+
+    /* Sticky identifier columns. STATE.stickyCols (array) drives which columns
+       are pinned. renderTable adds .sticky-col + .sticky-col-N (with N = index)
+       and .sticky-col-last on the rightmost pinned column. JS measures column
+       widths and writes --sticky-left-N CSS variables for the offsets. */
+    #maestro thead th.sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 25;
+      background: var(--sticky-header-bg);
+    }
+
+    #maestro tbody td.sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      background: var(--sticky-body-bg);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Per-index left offsets. .sticky-col-0 stays at 0; subsequent columns
+       are pushed by the cumulative width of prior sticky columns (set by JS). */
+    #maestro thead th.sticky-col-1,
+    #maestro tbody td.sticky-col-1 { left: var(--sticky-left-1, 0px); }
+    #maestro thead th.sticky-col-2,
+    #maestro tbody td.sticky-col-2 { left: var(--sticky-left-2, 0px); }
+    #maestro thead th.sticky-col-3,
+    #maestro tbody td.sticky-col-3 { left: var(--sticky-left-3, 0px); }
+
+    #maestro tbody tr:hover td.sticky-col {
+      background: var(--sticky-body-hover-bg);
+    }
+
+    /* Right-edge fade only on the last pinned column (the visual boundary
+       between the pinned area and the scrolling area). */
+    #maestro thead th.sticky-col-last::after,
+    #maestro tbody td.sticky-col-last::after,
+    #maestro tfoot td.sticky-col-last::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -8px;
+      bottom: 0;
+      width: 8px;
+      pointer-events: none;
+      background: linear-gradient(to right, rgba(0, 0, 0, 0.18), transparent);
+    }
+
+    /* =========================================================
+       Totals row (tfoot). Pinned to the bottom of the scroll area
+       and aggregated over all filtered rows. Maestro view only;
+       ZQM renders no tfoot row. Mirrors the sticky-column logic so
+       the SUERTE cell stays pinned to the bottom-left corner.
+       ========================================================= */
+    #maestro tfoot td {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      background: var(--table-header-bg);
+      color: var(--text-main);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      border-top: 2px solid var(--success-text);
+      box-shadow: 0 -6px 14px -8px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Identifier (SUERTE) cell: pinned both left and bottom (corner). */
+    #maestro tfoot td.sticky-col {
+      left: 0;
+      z-index: 24;
+      background: var(--sticky-header-bg);
+    }
+
+    .totals-cell.totals-label {
+      color: var(--success-text);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .totals-count {
+      display: block;
+      margin-top: 0.1rem;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: none;
+      color: var(--text-muted);
+    }
+
+    .totals-cell.totals-value {
+      color: var(--success-text);
+    }
+
+    /* Secondary line inside a totals cell (e.g. TCH estimado under TCH PPTO). */
+    .totals-secondary {
+      display: block;
+      margin-top: 0.05rem;
+      font-size: 0.66rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Inline hint after a value (e.g. "ponderada" next to the weighted age). */
+    .totals-hint {
+      margin-left: 0.3rem;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--text-muted);
+    }
+
+    /* Light theme: softer top shadow on the totals row. */
+    :root.light #maestro tfoot td {
+      box-shadow: 0 -4px 12px -8px rgba(15, 23, 42, 0.18);
+    }
+
+    /* Empty / error values (#N/D, #N/A, #REF!, blanks, etc.) */
+    .cell-empty {
+      color: var(--text-muted) !important;
+      opacity: 0.55;
+      font-style: italic;
+    }
+
+    /* Toolbar: filter selects and tool buttons */
+    .filter-select {
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.5rem;
+      padding: 0.45rem 1.9rem 0.45rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath d='M5 8l5 5 5-5H5z'/%3E%3C/svg%3E");
+      background-position: right 0.4rem center;
+      background-repeat: no-repeat;
+      background-size: 1em;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      min-width: 8rem;
+      max-width: 13rem;
+    }
+
+    .filter-select:hover {
+      border-color: rgba(45, 212, 191, 0.45);
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--success-text);
+      box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.18);
+    }
+
+    .filter-select[data-active="true"] {
+      border-color: var(--success-text);
+      color: var(--success-text);
+    }
+
+    /* Multi-select filter: button trigger + checkbox popover */
+    .filter-multi {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .filter-multi-trigger {
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.5rem;
+      padding: 0.45rem 0.45rem 0.45rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+      min-width: 8rem;
+      max-width: 13rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .filter-multi-trigger:hover {
+      border-color: rgba(45, 212, 191, 0.45);
+    }
+
+    .filter-multi.active .filter-multi-trigger {
+      border-color: var(--success-text);
+      color: var(--success-text);
+    }
+
+    .filter-multi-label {
+      font-weight: 600;
+    }
+
+    .filter-multi-count {
+      margin-left: auto;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      font-weight: 500;
+    }
+
+    .filter-multi.active .filter-multi-count {
+      opacity: 1;
+      background: rgba(45, 212, 191, 0.18);
+      color: var(--success-text);
+      padding: 0.05rem 0.45rem;
+      border-radius: 999px;
+      min-width: 1.25rem;
+      text-align: center;
+    }
+
+    .filter-multi-chevron {
+      font-size: 1.15em !important;
+      opacity: 0.6;
+      transition: transform 0.2s;
+    }
+
+    .filter-multi[aria-expanded="true"] .filter-multi-chevron,
+    .filter-multi-trigger[aria-expanded="true"] .filter-multi-chevron {
+      transform: rotate(180deg);
+    }
+
+    .filter-multi-popover {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 35;
+      min-width: 100%;
+      max-width: 280px;
+      max-height: 280px;
+      overflow-y: auto;
+      background: var(--modal-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.65rem;
+      box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.45);
+      padding: 0.5rem;
+    }
+
+    .filter-multi-popover.hidden {
+      display: none;
+    }
+
+    /* Search box inside a multi-select popover (e.g. the exact-age filter). */
+    .popover-search {
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      /* 16px min prevents iOS from auto-zooming (and shifting the popover) on focus */
+      font-size: 16px;
+      color: var(--input-text);
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.4rem;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .popover-search:focus {
+      border-color: var(--success-text);
+      box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.18);
+    }
+
+    /* Funnel button on every column header (Excel-style value filter). */
+    .col-filter-btn {
+      font-size: 0.95rem !important;
+      vertical-align: -4px;
+      margin-left: 0.2rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--table-header-text);
+      opacity: 0.4;
+      cursor: pointer;
+      transition: color 0.15s, opacity 0.15s;
+    }
+
+    #maestro thead th:hover .col-filter-btn {
+      opacity: 0.7;
+    }
+
+    .col-filter-btn:hover,
+    .col-filter-btn.active {
+      opacity: 1;
+      color: var(--success-text);
+    }
+
+    /* Column-header popover is positioned fixed (set by JS) so it isn't clipped
+       by the table's overflow; sits above the sticky header and totals row. */
+    .header-filter-popover {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 60;
+      min-width: 220px;
+    }
+
+    .popover-head {
+      display: flex;
+      gap: 0.4rem;
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.3rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .popover-head button {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--glass-border);
+      border-radius: 0.35rem;
+      padding: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .popover-head button:hover {
+      border-color: var(--success-text);
+      color: var(--success-text);
+    }
+
+    .popover-option {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.4rem 0.35rem;
+      border-radius: 0.35rem;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: var(--text-main);
+      user-select: none;
+    }
+
+    .popover-option:hover {
+      background: var(--row-hover);
+    }
+
+    .popover-option input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border: 1.5px solid var(--glass-border);
+      border-radius: 0.25rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      background: var(--input-bg);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .popover-option input[type="checkbox"]:checked {
+      background: var(--success-text);
+      border-color: var(--success-text);
+    }
+
+    .popover-option input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 4px;
+      height: 8px;
+      border: solid #0b1220;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* In mobile drawer: popover becomes inline accordion */
+    @media (max-width: 767px) {
+      #filterDrawer .filter-multi {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #filterDrawer .filter-multi-trigger {
+        width: 100%;
+        max-width: none;
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 0.85rem;
+      }
+
+      #filterDrawer .filter-multi-popover {
+        position: static;
+        max-width: none;
+        margin-top: 0.45rem;
+        box-shadow: none;
+      }
+    }
+
+    .tool-button {
+      background-color: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.5rem;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      white-space: nowrap;
+    }
+
+    .tool-button:hover {
+      border-color: rgba(45, 212, 191, 0.45);
+      color: var(--success-text);
+    }
+
+    .tool-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Sortable column headers */
+    #maestro thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #maestro thead th.sortable:hover .sort-indicator {
+      opacity: 0.8;
+    }
+
+    .sort-indicator {
+      font-size: 1em;
+      vertical-align: -4px;
+      margin-left: 0.15rem;
+      opacity: 0.25;
+      transition: opacity 0.15s, color 0.15s;
+    }
+
+    .sort-indicator.active {
+      opacity: 1;
+      color: var(--success-text);
+    }
+
+    /* =========================================================
+       Mobile filter drawer (< 768px).
+       Same DOM element reused: on desktop it's an inline toolbar,
+       on mobile it slides in from the right.
+       ========================================================= */
+    /* Elements hidden by default on desktop */
+    #filterTrigger,
+    #filterBackdrop,
+    .drawer-header {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      #filterDrawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: min(86vw, 340px);
+        padding: 4rem 1rem 1rem;
+        margin-bottom: 0;
+        background: var(--modal-bg);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-left: 1px solid var(--glass-border);
+        box-shadow: -24px 0 48px -12px rgba(0, 0, 0, 0.5);
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 50;
+        overflow-y: auto;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+      }
+
+      #filterDrawer.open {
+        transform: translateX(0);
+      }
+
+      /* Drawer items go full-width vertical on mobile */
+      #filterDrawer > * {
+        width: 100%;
+      }
+
+      #filterDrawer .filter-select,
+      #filterDrawer .tool-button {
+        width: 100%;
+        max-width: none;
+        padding-top: 0.7rem;
+        padding-bottom: 0.7rem;
+        font-size: 0.85rem;
+        justify-content: center;
+      }
+
+      #filterDrawer .drawer-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        margin-left: 0 !important;
+      }
+
+      #filterDrawer #clearFilters {
+        justify-content: center;
+      }
+
+      #filterDrawer .drawer-header {
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 0.9rem 1rem;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--glass-border);
+        background: inherit;
+      }
+
+      #filterBackdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.6);
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.28s ease-out;
+        z-index: 45;
+      }
+
+      #filterBackdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      #filterTrigger {
+        display: flex;
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        z-index: 40;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.9rem 0.7rem;
+        border-radius: 1rem 0 0 1rem;
+        background: var(--glass-bg);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border: 1px solid var(--glass-border);
+        border-right: none;
+        color: var(--text-main);
+        box-shadow: -6px 4px 18px rgba(0, 0, 0, 0.3);
+        cursor: pointer;
+      }
+
+      #filterTrigger:active {
+        transform: translateY(-50%) scale(0.97);
+      }
+
+      #filterTrigger .material-symbols-outlined {
+        font-size: 22px;
+      }
+
+      #filterTriggerBadge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: var(--success-text);
+        color: #0b1220;
+        font-size: 10px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        border: 2px solid var(--modal-bg);
+      }
+
+      #filterTriggerBadge.hidden {
+        display: none;
+      }
+
+      /* Don't let the drawer force body width */
+      body.drawer-open {
+        overflow: hidden;
+      }
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      #filterDrawer,
+      #filterBackdrop {
+        transition: none;
+      }
+    }
+
+    /* Bottom navigation (Maestro / ZQM tabs) */
+    body {
+      padding-bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    #bottomNav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      display: flex;
+      justify-content: center;
+      gap: 0.25rem;
+      background: var(--header-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border);
+      padding: 0.25rem 0.5rem calc(0.25rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    #bottomNav .nav-item {
+      flex: 1;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.05rem;
+      padding: 0.3rem 0.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 0.55rem;
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: color 0.15s, background-color 0.15s;
+    }
+
+    #bottomNav .nav-item:hover {
+      color: var(--text-main);
+      background: var(--row-hover);
+    }
+
+    #bottomNav .nav-item.active {
+      color: var(--success-text);
+    }
+
+    #bottomNav .nav-item.active .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1;
+    }
+
+    #bottomNav .nav-item .material-symbols-outlined {
+      font-size: 19px;
+    }
+
+    /* =========================================================
+       KPI dashboard inside the detail modal (used by ZQM view).
+       ========================================================= */
+    .kpi-modal {
+      display: block;
+    }
+
+    .kpi-header {
+      padding-bottom: 0.85rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .kpi-suerte {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .kpi-sector {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+      letter-spacing: 0.3px;
+    }
+
+    .kpi-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.55rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--success-text);
+      background: rgba(45, 212, 191, 0.12);
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(45, 212, 191, 0.25);
+    }
+
+    .kpi-date .material-symbols-outlined {
+      font-size: 14px;
+    }
+
+    .kpi-date-sep {
+      opacity: 0.5;
+      margin: 0 0.15rem;
+    }
+
+    .kpi-section {
+      margin-bottom: 1rem;
+    }
+
+    .kpi-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .kpi-section-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      padding-left: 0.15rem;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+      gap: 0.55rem;
+    }
+
+    .kpi-card {
+      position: relative;
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.65rem;
+      padding: 0.7rem 0.8rem 0.6rem;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s, background-color 0.15s;
+      overflow: hidden;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .kpi-card.accent {
+      border-color: rgba(45, 212, 191, 0.35);
+      background: rgba(45, 212, 191, 0.08);
+    }
+
+    .kpi-card.empty {
+      opacity: 0.55;
+    }
+
+    .kpi-icon {
+      position: absolute;
+      top: 0.55rem;
+      right: 0.55rem;
+      font-size: 18px !important;
+      color: var(--text-muted);
+      opacity: 0.55;
+    }
+
+    .kpi-card.accent .kpi-icon {
+      color: var(--success-text);
+      opacity: 0.8;
+    }
+
+    .kpi-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+      padding-right: 1.2rem;  /* leave room for the corner icon */
+    }
+
+    .kpi-card.accent .kpi-value {
+      color: var(--success-text);
+    }
+
+    .kpi-card.empty .kpi-value {
+      font-style: italic;
+      color: var(--text-muted);
+    }
+
+    .kpi-unit {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 0.15rem;
+    }
+
+    .kpi-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+
+    /* =========================================================
+       Simple per-row detail list (Maestro modal). One field per
+       row: uppercase muted label on the left, value on the right.
+       Replaces the KPI card grid for the Maestro detail view.
+       ========================================================= */
+    .detail-id {
+      padding-bottom: 0.85rem;
+      margin-bottom: 0.25rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .detail-id-suerte {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .detail-id-sub {
+      margin-top: 0.2rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
+
+    /* Enlace de ubicación (tabla) e ícono de ubicación (detalle), ambos a Rio Map. */
+    .riomap-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #14b8a6;
+      font-weight: 600;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .riomap-link:hover { color: #2dd4bf; text-decoration: underline; }
+
+    .detail-id-top {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    /* 44px de área táctil; el margen negativo evita que agrande el encabezado. */
+    .riomap-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      margin: -10px 0;
+      border-radius: 9999px;
+      color: #14b8a6;
+      text-decoration: none;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .riomap-icon .material-symbols-outlined { font-size: 28px; }
+    .riomap-icon:hover { background: rgba(20, 184, 166, 0.14); color: #2dd4bf; }
+    .riomap-icon:active { background: rgba(20, 184, 166, 0.24); }
+    .riomap-icon:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 1px; }
+    :root.light .riomap-icon { color: #0d9488; }
+    :root.light .riomap-icon:hover { color: #0f766e; }
+    .riomap-icon-off,
+    .riomap-icon-off:hover,
+    :root.light .riomap-icon-off {
+      color: var(--text-muted);
+      background: none;
+      opacity: 0.55;
+      cursor: default;
+    }
+
+    .detail-list .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      padding: 0.6rem 0.15rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .detail-list .detail-row:last-child {
+      border-bottom: 0;
+    }
+
+    .detail-label {
+      flex: 0 0 42%;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      word-break: break-word;
+    }
+
+    .detail-value {
+      flex: 1 1 auto;
+      text-align: right;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    /* Empty/error values keep the muted italic treatment. */
+    .detail-value.cell-empty {
+      font-weight: 500;
+    }
+
+    /* =========================================================
+       Light-theme overrides for elements styled with hardcoded
+       dark Tailwind utility classes. Dark theme stays unchanged.
+       ========================================================= */
+    :root.light #appVersion {
+      color: var(--text-muted);
+    }
+
+    :root.light #miniStatus {
+      background: rgba(15, 23, 42, 0.04);
+      border-color: rgba(15, 23, 42, 0.08);
+    }
+
+    :root.light #miniStatus span {
+      color: var(--text-main);
+    }
+
+    :root.light #themeToggle {
+      color: var(--text-muted);
+    }
+
+    :root.light #themeToggle:hover {
+      color: var(--text-main);
+      background: rgba(15, 23, 42, 0.05);
+    }
+
+    /* "ESC para limpiar" hint inside the search bar */
+    :root.light #searchInput + .hidden,
+    :root.light .relative.glass-panel > .hidden.sm\:flex {
+      color: var(--text-muted) !important;
+      border-color: var(--glass-border) !important;
+    }
+
+    /* Results chip */
+    :root.light #resultsChip {
+      background: rgba(15, 23, 42, 0.04) !important;
+      border-color: rgba(15, 23, 42, 0.08) !important;
+      color: var(--text-muted) !important;
+    }
+
+    /* Table dividers — softer */
+    :root.light #maestro tbody tr {
+      border-color: rgba(15, 23, 42, 0.05) !important;
+    }
+
+    /* Pagination footer */
+    :root.light #pagination {
+      background: rgba(248, 250, 252, 0.7) !important;
+      border-top-color: rgba(15, 23, 42, 0.06) !important;
+    }
+
+    :root.light #pageInfo {
+      background: rgba(13, 148, 136, 0.08) !important;
+      border-color: rgba(13, 148, 136, 0.18) !important;
+      color: var(--success-text) !important;
+    }
+
+    :root.light #prevPage,
+    :root.light #nextPage {
+      color: var(--text-muted) !important;
+    }
+
+    :root.light #prevPage:hover:not(:disabled),
+    :root.light #nextPage:hover:not(:disabled) {
+      color: var(--text-main) !important;
+      background: rgba(15, 23, 42, 0.05) !important;
+    }
+
+    /* Modal: kill hardcoded dark backgrounds + correct text in buttons */
+    :root.light #detailModal .glass-header.bg-slate-900\/80 {
+      background: var(--header-bg) !important;
+    }
+
+    :root.light #detailModal .bg-slate-900\/50 {
+      background: rgba(248, 250, 252, 0.7) !important;
+      border-top-color: rgba(15, 23, 42, 0.06) !important;
+    }
+
+    :root.light #detailModal h3 {
+      color: var(--text-main) !important;
+    }
+
+    :root.light #detailModal button.text-slate-400 {
+      color: var(--text-muted) !important;
+    }
+
+    :root.light #detailModal button.text-slate-400:hover:not(:disabled) {
+      color: var(--text-main) !important;
+      background: rgba(15, 23, 42, 0.06) !important;
+    }
+
+    :root.light #detailModal #modalIndex {
+      color: var(--text-muted) !important;
+    }
+
+    /* "Cerrar" button in modal footer */
+    :root.light #detailModal .bg-white\/5 {
+      background: rgba(15, 23, 42, 0.05) !important;
+      color: var(--text-main) !important;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.1) !important;
+    }
+
+    :root.light #detailModal .bg-white\/5:hover {
+      background: rgba(15, 23, 42, 0.1) !important;
+    }
+
+    /* Modal backdrop slightly lighter so it doesn't feel as heavy */
+    :root.light #detailModal .bg-slate-950\/60 {
+      background: rgba(15, 23, 42, 0.35) !important;
+    }
+
+    /* Drawer header in light */
+    :root.light .drawer-header h2 {
+      color: var(--text-main);
+    }
+
+    :root.light .drawer-header button.text-slate-400 {
+      color: var(--text-muted) !important;
+    }
+    :root.light .drawer-header button.text-slate-400:hover {
+      color: var(--text-main) !important;
+      background: rgba(15, 23, 42, 0.06) !important;
+    }
+
+    /* Sort indicators with better contrast on white */
+    :root.light .sort-indicator {
+      color: var(--text-muted);
+    }
+
+    /* Results "Toca el panel lateral para filtrar" hint on mobile */
+    :root.light .text-slate-500 {
+      color: var(--text-muted) !important;
+    }
+
+    /* Bottom nav border in light */
+    :root.light #bottomNav {
+      border-top-color: rgba(15, 23, 42, 0.08);
+    }
+
+    /* Online badge in installer (#installStatus uses similar dark assumptions
+       — applies if the user happens to land here from index.html) */
+    :root.light #miniStatus div.bg-emerald-500 {
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Right-edge fade overlay hinting horizontal scroll */
+    #scrollFadeRight {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40px;
+      pointer-events: none;
+      background: linear-gradient(to left, var(--bg-body) 10%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.25s ease-out;
+      z-index: 30;
+    }
+
+    #scrollFadeRight.visible {
+      opacity: 0.9;
+    }
+
+    /* Animation Utils */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-down {
+      animation: fadeInDown 0.4s ease-out forwards;
+    }
+  </style>
+
+  <!-- AI Metadata -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    "name": "Maestro de Suertes Riopaila",
+    "description": "Base de datos agrícola con información de suertes, variedad, edad y ubicación.",
+    "isAccessibleForFree": true,
+    "keywords": ["agricultural", "sugarcane", "suertes", "harvest"],
+    "creator": {
+      "@type": "Organization",
+      "name": "Riopaila Agrícola"
+    }
+  }
+  </script>
+  <script>
+    // Temporada de Halloween: del 24 de octubre al 2 de noviembre, cualquier año.
+    // Se aplica aquí, en el <head>, para que la clase exista antes del primer
+    // pintado y no haya parpadeo de color. Se apaga sola: nadie tiene que
+    // acordarse de quitarla, ni este año ni los siguientes.
+    (function aplicarTemporada() {
+      const hoy = new Date(), mes = hoy.getMonth() + 1, dia = hoy.getDate();
+      if ((mes === 10 && dia >= 24) || (mes === 11 && dia <= 2)) {
+        document.documentElement.classList.add('temporada-halloween');
+      }
+    })();
+  </script>
+</head>
+
+<body class="h-[100dvh] w-full overflow-hidden flex flex-col selection:bg-teal-500/30 selection:text-teal-200">
+
+  <!-- Dynamic Background -->
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="blob blob-1 mix-blend-screen"></div>
+    <div class="blob blob-2 mix-blend-screen"></div>
+    <div class="blob blob-3 mix-blend-screen"></div>
+    <div class="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]"></div>
+  </div>
+
+  <!-- Header (Static in Flex Layout) -->
+  <header class="glass-header shrink-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between">
+      <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+        <div
+          class="relative w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 flex items-center justify-center border border-white/10">
+          <img src="icon-192.png" alt="Logo" class="w-6 h-6 object-contain">
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-bold text-base leading-none tracking-tight" id="appTitleText" style="color: var(--text-main)">Maestro de <span
+                class="text-teal-400">Suertes</span></h1>
+            <svg class="calabaza" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 8.4c4.3 0 7.8 2.6 7.8 5.9s-3.5 5.9-7.8 5.9-7.8-2.6-7.8-5.9S7.7 8.4 12 8.4Z" />
+              <path d="M9.3 9c-.8 1.4-1.3 3.2-1.3 5.3s.5 3.9 1.3 5.3" />
+              <path d="M14.7 9c.8 1.4 1.3 3.2 1.3 5.3s-.5 3.9-1.3 5.3" />
+              <path d="M12 8.4V6.3c0-1 .8-1.8 1.8-1.8" />
+            </svg>
+          </div>
+          <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
+            <span id="appVersion">v2.5.2</span>
+            <span class="text-slate-600" aria-hidden="true">·</span>
+            <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
+            <span id="dataUpdated"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button id="themeToggle" onclick="toggleTheme()" data-ai-action="toggle-theme"
+        class="p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors mr-2 relative group">
+        <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+        <span
+          class="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-xs text-slate-200 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">Tema</span>
+      </button>
+
+      <!-- Connection Status Indicator (Mini) -->
+      <div id="miniStatus"
+        class="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50">
+        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+        <span class="text-xs text-slate-300 font-medium">Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content (Scrollable Container) -->
+  <main class="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-3 pb-2 overflow-hidden relative z-10">
+
+    <!-- Banners Container -->
+    <div class="space-y-2 mb-2 shrink-0 empty:mb-0">
+
+
+
+      <!-- Offline Banner -->
+      <div id="offlineBanner"
+        class="hidden glass-panel border-l-4 border-l-blue-500 p-3 rounded-xl flex items-center gap-3 animate-fade-in-down">
+        <span class="material-symbols-outlined text-blue-400">wifi_off</span>
+        <span class="text-sm text-slate-200"><strong>Modo Offline:</strong> Mostrando datos guardados en el
+          dispositivo.</span>
+      </div>
+
+      <!-- Company scope (Maestro): now shown as a compact chip in the results row
+           (see #companyChip) instead of a full-width banner, to save space. -->
+
+      <!-- No company selected (Maestro): prompt to pick one on the home screen -->
+      <div id="noCompanyBanner"
+        class="hidden glass-panel border-l-4 border-l-amber-500 p-4 rounded-xl flex items-center gap-3 animate-fade-in-down">
+        <span class="material-symbols-outlined text-amber-400">apartment</span>
+        <span class="text-sm text-slate-200"><strong>Selecciona una empresa</strong> en el inicio para ver sus
+          suertes.</span>
+        <button type="button" onclick="window.location.href='index.html'"
+          class="ml-auto text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 transition-colors">
+          <span class="material-symbols-outlined text-base">home</span>
+          Ir al inicio
+        </button>
+      </div>
+
+      <!-- Error Banner -->
+      <div id="errorMsg"
+        class="hidden glass-panel border-l-4 border-l-red-500 p-6 rounded-xl text-center animate-fade-in-down">
+        <!-- Content injected by JS -->
+      </div>
+
+    </div>
+
+    <!-- Search & Controls -->
+    <div class="mb-2 shrink-0">
+      <div class="relative group">
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-emerald-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition duration-500">
+        </div>
+        <div
+          class="relative glass-panel rounded-xl flex items-center px-4 py-2 transition-colors focus-within:border-teal-500/50">
+          <span class="material-symbols-outlined text-slate-400 mr-3">search</span>
+          <input id="searchInput" type="search"
+            class="glass-input bg-transparent border-none text-base w-full focus:ring-0 p-0 rounded-lg"
+            data-ai-input="search-suertes" style="color: var(--input-text);"
+            placeholder="Buscar por suerte, zona, finca o código..." autocomplete="off">
+          <div class="hidden sm:flex text-xs text-slate-500 border border-slate-700/50 rounded px-2 py-1 ml-2">ESC para
+            limpiar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results chip + company scope chip (always visible, both mobile and desktop) -->
+    <div class="mb-2 shrink-0 flex items-center gap-2">
+      <span id="resultsChip" aria-live="polite"
+        class="text-xs font-mono text-slate-400 bg-slate-800/40 px-3 py-1.5 rounded-full border border-slate-700/30">
+        <span id="resultCount">0</span> resultados
+      </span>
+
+      <!-- Compact company scope chip (replaces the old full-width banner).
+           Tappable → home screen to change company. Toggled by updateCompanyUi(). -->
+      <button id="companyChip" type="button" onclick="window.location.href='index.html'"
+        class="hidden inline-flex ml-auto items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 transition-colors text-teal-400 hover:text-teal-300 bg-teal-500/10 hover:bg-teal-500/15 border border-teal-500/25"
+        title="Cambiar empresa" aria-label="Cambiar empresa">
+        <span class="material-symbols-outlined text-sm">apartment</span>
+        <span id="companyChipName" class="max-w-[45vw] truncate">—</span>
+        <span class="material-symbols-outlined text-sm opacity-70">swap_horiz</span>
+      </button>
+    </div>
+
+    <!-- Filters & Toolbar (inline on desktop, drawer on mobile) -->
+    <aside id="filterDrawer" role="group" aria-labelledby="filtersTitle"
+      class="mb-3 shrink-0 flex flex-wrap items-center gap-2">
+      <div class="drawer-header">
+        <h2 id="filtersTitle" class="text-sm font-bold text-white flex items-center gap-2">
+          <span class="material-symbols-outlined text-teal-400 text-lg">tune</span>
+          Filtros y herramientas
+        </h2>
+        <button type="button" aria-label="Cerrar filtros"
+          class="rounded-full p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+          onclick="closeFilterDrawer()">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <select id="filterZona" class="filter-select" aria-label="Filtrar por zona">
+        <option value="">Todas las zonas</option>
+      </select>
+      <select id="filterFinca" class="filter-select" aria-label="Filtrar por finca">
+        <option value="">Todas las fincas</option>
+      </select>
+      <select id="filterVariedad" class="filter-select" aria-label="Filtrar por variedad">
+        <option value="">Todas las variedades</option>
+      </select>
+      <select id="filterUso" class="filter-select" aria-label="Filtrar por uso">
+        <option value="">Todos los usos</option>
+      </select>
+
+      <div class="filter-multi" data-key="corte">
+        <button type="button" class="filter-multi-trigger"
+          aria-expanded="false" aria-controls="cortePopover" aria-label="Filtrar por número de corte"
+          onclick="toggleMultiPopover('corte')">
+          <span class="filter-multi-label">Corte</span>
+          <span class="filter-multi-count">Todos</span>
+          <span class="material-symbols-outlined filter-multi-chevron">arrow_drop_down</span>
+        </button>
+        <div id="cortePopover" class="filter-multi-popover hidden" role="group" aria-label="Opciones de número de corte">
+          <div class="popover-head">
+            <button type="button" onclick="selectAllMulti('corte')">Seleccionar todos</button>
+            <button type="button" onclick="clearMulti('corte')">Ninguno</button>
+          </div>
+          <div class="popover-list" id="corteOptions"></div>
+        </div>
+      </div>
+
+      <div class="filter-multi" data-key="edad">
+        <button type="button" class="filter-multi-trigger"
+          aria-expanded="false" aria-controls="edadPopover" aria-label="Filtrar por edad en meses"
+          onclick="toggleMultiPopover('edad')">
+          <span class="filter-multi-label">Edad</span>
+          <span class="filter-multi-count">Todas</span>
+          <span class="material-symbols-outlined filter-multi-chevron">arrow_drop_down</span>
+        </button>
+        <div id="edadPopover" class="filter-multi-popover hidden" role="group" aria-label="Opciones de edad en meses">
+          <div class="popover-head">
+            <button type="button" onclick="selectAllMulti('edad')">Seleccionar todas</button>
+            <button type="button" onclick="clearMulti('edad')">Ninguno</button>
+          </div>
+          <div class="popover-list" id="edadOptions"></div>
+        </div>
+      </div>
+
+      <button id="clearFilters" type="button"
+        class="hidden px-2 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-base">filter_alt_off</span>
+        Limpiar
+      </button>
+
+      <div class="drawer-controls flex items-center gap-2 ml-auto">
+        <select id="pageSizeSelect" class="filter-select" aria-label="Registros por página" style="min-width: 6rem">
+          <option value="25">25 / pág</option>
+          <option value="50">50 / pág</option>
+          <option value="100">100 / pág</option>
+          <option value="200">200 / pág</option>
+        </select>
+        <button id="exportBtn" type="button" class="tool-button"
+          title="Descargar CSV con los datos visibles (filtros y orden aplicados)">
+          <span class="material-symbols-outlined text-base">download</span>
+          Exportar
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile filter drawer: trigger tab and backdrop -->
+    <button id="filterTrigger" type="button" aria-expanded="false" aria-controls="filterDrawer"
+      aria-label="Abrir filtros y herramientas" onclick="toggleFilterDrawer()">
+      <span class="material-symbols-outlined">tune</span>
+      <span id="filterTriggerBadge" class="hidden">0</span>
+    </button>
+    <div id="filterBackdrop" aria-hidden="true" onclick="closeFilterDrawer()"></div>
+
+    <!-- Content Area -->
+
+    <!-- Loading State -->
+    <div id="loadingMsg" class="flex flex-col items-center justify-center py-20 text-slate-400">
+      <div class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mb-4"></div>
+      <span class="text-sm font-medium animate-pulse">Cargando maestro de suertes...</span>
+    </div>
+
+    <!-- Data Table (Scrollable) -->
+    <div id="tableContainer"
+      class="hidden glass-panel rounded-2xl overflow-hidden flex flex-col shadow-2xl shadow-black/40 flex-1 min-h-0">
+      <div class="relative flex-1 min-h-0">
+        <div id="tableScroll" class="overflow-auto custom-scroll h-full">
+          <table id="maestro" class="w-full text-left border-collapse" data-ai-region="data-table">
+            <caption class="sr-only" id="tableCaption">Maestro de Suertes</caption>
+            <thead
+              class="bg-slate-900/50 text-xs uppercase text-slate-400 font-semibold sticky top-0 z-20 backdrop-blur-md">
+              <!-- Headers injected by JS -->
+            </thead>
+            <tbody class="divide-y divide-slate-800/50 text-sm text-slate-300">
+              <!-- Rows injected by JS -->
+            </tbody>
+            <tfoot id="maestroFoot">
+              <!-- Totals row injected by JS (Maestro view only) -->
+            </tfoot>
+          </table>
+        </div>
+        <!-- Right-edge fade to hint horizontal scroll -->
+        <div id="scrollFadeRight" aria-hidden="true"></div>
+      </div>
+
+      <!-- Footer / Pagination -->
+      <div id="pagination"
+        class="border-t border-slate-700/30 bg-slate-900/30 px-3 py-2 flex items-center justify-between shrink-0">
+        <button id="prevPage"
+          class="flex items-center gap-1 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold uppercase tracking-wider">
+          <span class="material-symbols-outlined text-sm">chevron_left</span> Anterior
+        </button>
+
+        <span id="pageInfo"
+          class="text-xs font-mono text-teal-500/80 bg-teal-900/20 px-3 py-1 rounded-full border border-teal-500/10">
+          <!-- Page info -->
+        </span>
+
+        <button id="nextPage"
+          class="flex items-center gap-1 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-bold uppercase tracking-wider">
+          Siguiente <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Generic column-header filter (Excel-style). Shared popover, repopulated
+         for the active column on open and positioned (fixed) via JS next to the
+         header funnel so it isn't clipped by the table's overflow. -->
+    <div id="headerFilterPopover" class="filter-multi-popover header-filter-popover hidden"
+      role="group" aria-label="Filtrar columna">
+      <input type="search" class="popover-search" placeholder="Buscar..."
+        autocomplete="off" aria-label="Buscar valor" oninput="filterMultiOptions('headerFilter', this.value)">
+      <div class="popover-head">
+        <button type="button" onclick="headerFilterSelectAll()">Seleccionar todas</button>
+        <button type="button" onclick="headerFilterClear()">Ninguno</button>
+      </div>
+      <div class="popover-list" id="headerFilterOptions"></div>
+    </div>
+
+  </main>
+
+  <!-- Bottom tab navigation -->
+  <nav id="bottomNav" role="navigation" aria-label="Navegación principal">
+    <button type="button" class="nav-item active" data-view="maestro"
+      aria-current="page" onclick="switchView('maestro')">
+      <span class="material-symbols-outlined">table_view</span>
+      <span>Maestro</span>
+    </button>
+    <button type="button" class="nav-item" data-view="zqm"
+      aria-current="false" onclick="switchView('zqm')">
+      <span class="material-symbols-outlined">analytics</span>
+      <span>ZQM</span>
+    </button>
+  </nav>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
+    aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+
+    <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+
+        <!-- Modal Panel -->
+        <div
+          class="relative transform overflow-hidden rounded-2xl glass-panel text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-white/10">
+
+          <!-- Header -->
+          <div
+            class="glass-header px-4 py-3 sm:px-6 flex justify-between items-center sticky top-0 z-10 bg-slate-900/80 backdrop-blur-md gap-2">
+            <h3 id="modal-title" class="text-lg font-bold leading-6 text-white flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-teal-400 shrink-0">info</span>
+              <span class="truncate" id="modalTitleText">Detalle de la Suerte</span>
+            </h3>
+            <div class="flex items-center gap-1 shrink-0">
+              <button id="modalPrev" type="button" aria-label="Registro anterior"
+                class="rounded-full p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                onclick="navigateModal(-1)">
+                <span class="material-symbols-outlined text-xl">chevron_left</span>
+              </button>
+              <span id="modalIndex" class="text-xs font-mono text-slate-400 px-2" aria-live="polite"></span>
+              <button id="modalNext" type="button" aria-label="Registro siguiente"
+                class="rounded-full p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                onclick="navigateModal(+1)">
+                <span class="material-symbols-outlined text-xl">chevron_right</span>
+              </button>
+              <button type="button" aria-label="Cerrar"
+                class="rounded-full p-1 text-slate-400 hover:text-white hover:bg-white/10 transition-all ml-1"
+                onclick="closeModal()">
+                <span class="material-symbols-outlined text-xl">close</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="px-4 py-5 sm:p-6 max-h-[70vh] overflow-y-auto custom-scroll">
+            <dl id="modalContent" class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+              <!-- Injected content -->
+            </dl>
+          </div>
+
+          <!-- Footer -->
+          <!-- Compartir / Descargar generan una imagen PNG de la ficha (ver renderDetailPng) -->
+          <div class="bg-slate-900/50 px-4 py-3 sm:px-6 flex flex-wrap gap-2 sm:justify-end border-t border-white/5">
+            <button type="button" id="modalDownload"
+              class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/10 hover:bg-white/10 disabled:opacity-50 transition-all"
+              onclick="downloadDetail()">
+              <span class="material-symbols-outlined text-lg" aria-hidden="true">download</span>
+              Descargar
+            </button>
+            <button type="button" id="modalShare"
+              class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:opacity-50 transition-all"
+              onclick="shareDetail()">
+              <!-- SVG en línea: 'share' no está en el subset de Material Symbols -->
+              <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" />
+              </svg>
+              Compartir
+            </button>
+            <button type="button"
+              class="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-white/5 px-3 py-2 text-sm font-semibold text-white shadow-sm ring-1 ring-inset ring-white/10 hover:bg-white/10 transition-all"
+              onclick="closeModal()">Cerrar</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =======================
+    // CONFIGURACIÓN
+    // =======================
+    // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
+    // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
+    const CONFIG = {
+      version: 'v2.5.2',
+      csvFile: 'maestro.csv',
+      pageSize: 25,
+      // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
+      // maestro.csv nuevo. Se pinta en el encabezado (ver #dataUpdated).
+      dataUpdated: '27 de octubre de 2026',
+      dataUpdatedShort: '27 oct 2026'
+    };
+
+    // =======================
+    // UBICACIÓN EN RIO MAP (deep-link)
+    // =======================
+    // La columna COORDENADAS ("lat,lon") de maestro.csv se convierte en un enlace
+    // que abre Rio Map en el punto de la suerte (misma app de campo). La empresa
+    // define la planta/cartografía: RIOP → riopaila; CAST/CAUC → castilla.
+    const RIOMAP_BASE = 'https://riomap.vercel.app';
+    function plantaDeEmpresa(emp) {
+      return String(emp || '').trim().toUpperCase() === 'RIOP' ? 'riopaila' : 'castilla';
+    }
+    function parseCoord(v) {
+      const m = String(v == null ? '' : v).match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (!m) return null;
+      const lat = Number(m[1]), lon = Number(m[2]);
+      if (!isFinite(lat) || !isFinite(lon)) return null;
+      return { lat, lon };
+    }
+    function rioMapUrl(coord, empresa, suerte) {
+      const q = new URLSearchParams({
+        p: plantaDeEmpresa(empresa),
+        lat: coord.lat.toFixed(6),
+        lon: coord.lon.toFixed(6),
+        n: 'Suerte ' + String(suerte == null ? '' : suerte).trim()
+      });
+      return RIOMAP_BASE + '/mapa?' + q.toString();
+    }
+    // Índices (por vista) de las columnas que alimentan el enlace de ubicación.
+    function coordCols() {
+      const H = STATE.headers || [];
+      return {
+        coord: H.findIndex(h => normalizeHeader(h) === 'COORDENADAS'),
+        suerte: H.findIndex(h => normalizeHeader(h) === 'SUERTE'),
+        empresa: H.findIndex(h => normalizeHeader(h) === 'EMPRESA')
+      };
+    }
+
+    // =======================
+    // VIEWS (Maestro / ZQM)
+    // =======================
+    // Two independent views living in the same UI. STATE is an alias to the
+    // active view's state object. switchView(key) swaps the alias and rebuilds
+    // the UI from the target view's stored state.
+    function makeViewState() {
+      return {
+        headers: [],
+        rows: [],
+        filteredRows: [],
+        currentPage: 1,
+        sortColumn: -1,
+        sortDirection: 'asc',
+        corteColumnIndex: -1,
+        edadColumnIndex: -1,
+        empresaColumnIndex: -1,
+        modalRowIndex: -1,
+        multiFilters: { corte: new Set(), edad: new Set() },
+        columnFilters: {},   // Excel-style per-column header filters: colIndex -> Set of display values
+        singleFilters: {},   // keyed by selectId
+        searchValue: '',
+        loaded: false
+      };
+    }
+
+    const VIEWS = {
+      maestro: Object.assign(makeViewState(), {
+        key: 'maestro',
+        csvFile: 'maestro.csv',
+        appTitleHtml: 'Maestro de <span class="text-teal-400">Suertes</span>',
+        captionBase: 'Maestro de Suertes',
+        searchPlaceholder: 'Buscar por suerte, zona, finca o código...',
+        exportPrefix: 'maestro-suertes',
+        stickyCols: [0],       // SUERTE
+        processor: 'maestro',  // custom edad-hoy calculation
+        modalRenderer: 'kpi',
+        modalTitle: 'Detalle de la Suerte',
+        filterConfig: [
+          { key: 'zona',     selectId: 'filterZona',     label: 'Todas las zonas',     match: h => normalizeHeader(h) === 'ZONA',             index: -1 },
+          { key: 'finca',    selectId: 'filterFinca',    label: 'Todas las fincas',    match: h => normalizeHeader(h) === 'FINCA',            index: -1 },
+          { key: 'variedad', selectId: 'filterVariedad', label: 'Todas las variedades', match: h => normalizeHeader(h) === 'VARIEDAD',        index: -1 },
+          { key: 'uso',      selectId: 'filterUso',      label: 'Todos los usos',      match: h => normalizeHeader(h) === 'USO DE LA SUERTE', index: -1 }
+        ],
+        multiConfig: {
+          corte: { label: 'Corte', allLabel: 'Todos', match: h => normalizeHeader(h) === 'NUMERO DE CORTE' },
+          // Maestro uses the calculated "EDAD HOY MESES" column (set by processor).
+          // Toolbar 'Edad' = integer ranges. Exact (decimal) age selection is
+          // available from the column header via the generic header filters.
+          edad:  { label: 'Edad',  allLabel: 'Todas', useCalculated: true }
+        },
+        // Totals row (tfoot) aggregated over ALL filtered rows. Declarative:
+        // each metric targets a column by normalized header name. Computed by
+        // renderTotals(). ZQM has no totalsConfig, so it shows no totals row.
+        totalsConfig: {
+          label: 'TOTALES',
+          metrics: [
+            { col: 'AREA NETA HA',        type: 'sum',         decimals: 2, unit: 'ha' },
+            { col: 'EDAD HOY MESES',      type: 'weightedAvg', weightBy: 'AREA NETA HA', decimals: 1, hint: 'ponderada' },
+            { col: 'TONELADAS PPTO',      type: 'sum',         decimals: 0 },
+            { col: 'TONELADAS ESTIMADAS', type: 'sum',         decimals: 0 },
+            // TCH del total = Σtoneladas / Σárea (no el promedio de los TCH por fila).
+            // El maestro no tiene columna propia de "TCH estimado", así que el TCH
+            // estimado se muestra como segunda línea dentro de la celda de TCH PPTO.
+            { col: 'TCH PPTO',            type: 'ratio',       num: 'TONELADAS PPTO', den: 'AREA NETA HA', decimals: 1,
+              secondary: { label: 'est.', num: 'TONELADAS ESTIMADAS', den: 'AREA NETA HA' } },
+            // Estimador TCH (tools/tch_random_forest.py). Ponderado por área solo sobre las
+            // suertes con estimado (= Σ toneladas estimadas / Σ su área); las vacías no cuentan.
+            { col: 'TCH RANDOM FOREST',   type: 'weightedAvg', weightBy: 'AREA NETA HA', decimals: 1, hint: 'ponderado' }
+          ]
+        }
+      }),
+      zqm: Object.assign(makeViewState(), {
+        key: 'zqm',
+        csvFile: 'zqm.csv',
+        appTitleHtml: 'ZQM<span class="text-teal-400">101</span>',
+        captionBase: 'ZQM101 - Histórico de Cortes',
+        searchPlaceholder: 'Buscar por suerte, sector, año...',
+        exportPrefix: 'zqm-cortes',
+        stickyCols: [0, 1],    // AÑO + Ubic Técnica
+        processor: 'generic',
+        modalRenderer: 'kpi',
+        modalTitle: 'Detalle del Corte',
+        filterConfig: [
+          // Tolerant to AÑO / AÑO / ANO variations across encodings.
+          { key: 'ano',    selectId: 'filterZona',     label: 'Todos los años',     match: h => { const n = normalizeHeader(h); return n === 'AÑO' || n === 'ANO' || n === 'AÃO'; }, index: -1 },
+          { key: 'sector', selectId: 'filterFinca',    label: 'Todos los sectores', match: h => normalizeHeader(h) === 'SECTOR', index: -1 },
+          { key: 'mes',    selectId: 'filterVariedad', label: 'Todos los meses',    match: h => normalizeHeader(h) === 'MES',    index: -1 },
+          // "Ubic Técnica" — tolerate "Técnica" / "Tecnica" / encoding variants.
+          { key: 'ubic',   selectId: 'filterUso',      label: 'Todas las ubic.',    match: h => normalizeHeader(h).startsWith('UBIC'), index: -1 }
+        ],
+        multiConfig: {
+          corte: { label: 'Corte', allLabel: 'Todos', match: h => normalizeHeader(h) === 'CORTE' },
+          edad:  { label: 'Edad',  allLabel: 'Todas', match: h => normalizeHeader(h) === 'EDAD' }
+        }
+      })
+    };
+
+    let CURRENT_VIEW_KEY = 'maestro';
+    let STATE = VIEWS[CURRENT_VIEW_KEY];
+
+    // =======================
+    // ALCANCE POR EMPRESA
+    // =======================
+    // The home screen (index.html) opens this page with ?empresa=RIOP (Riopaila)
+    // or ?empresa=CAST,CAUC (Castilla, which includes the CAUC suertes). The Maestro
+    // view is then locked to those EMPRESA codes. ZQM has no EMPRESA column and is
+    // never company-scoped. With no param, the Maestro view shows no rows and prompts
+    // the user to pick a company from the home screen.
+    const COMPANY = (function () {
+      const raw = new URLSearchParams(window.location.search).get('empresa');
+      if (!raw) return { active: false, set: null, label: '' };
+      const codes = decodeURIComponent(raw)
+        .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+      if (!codes.length) return { active: false, set: null, label: '' };
+      const set = new Set(codes);
+      let label = codes.join(', ');
+      if (set.has('RIOP')) label = 'Riopaila';
+      else if (set.has('CAST') || set.has('CAUC')) label = 'Castilla';
+      return { active: true, set, label };
+    })();
+
+    // Google Sheets / Excel error sentinels that sometimes leak into CSV exports
+    const ERROR_VALUES = new Set([
+      '#N/D', '#N/A', '#REF!', '#VALUE!', '#DIV/0!', '#NAME?',
+      '#NULL!', '#NUM!', '#ERROR!', 'NULL', 'UNDEFINED'
+    ]);
+
+    function sanitizeCell(val) {
+      if (val === null || val === undefined) return { text: '—', isEmpty: true };
+      const s = String(val).trim();
+      if (s === '') return { text: '—', isEmpty: true };
+      if (ERROR_VALUES.has(s.toUpperCase())) {
+        return { text: '—', isEmpty: true, original: s };
+      }
+      return { text: String(val), isEmpty: false };
+    }
+
+    // Normalize a header string for tolerant matching across encodings and whitespace.
+    // Returns uppercase, single-spaced, trimmed form. Does NOT strip non-ASCII so
+    // that match functions can still check for "AÑO" etc. when the file is correctly
+    // encoded UTF-8.
+    function normalizeHeader(h) {
+      return (h || '').toString().toUpperCase().replace(/\s+/g, ' ').trim();
+    }
+
+    // Read a CSV response as text. response.text() always assumes UTF-8, but Excel
+    // often exports ANSI (windows-1252) — those bytes decode to replacement chars,
+    // turning "AÑO" into "A<?>O". Try strict UTF-8 first, fall back to windows-1252.
+    async function readCsvResponse(response) {
+      const buf = await response.arrayBuffer();
+      try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+      } catch (e) {
+        return new TextDecoder('windows-1252').decode(buf);
+      }
+    }
+
+    // RFC 4180-ish CSV parser: respects double-quoted fields, escaped "" inside quotes,
+    // and embedded newlines in quoted cells. Skips fully-empty lines. Strips a leading
+    // UTF-8 BOM if present.
+    function parseCsvText(text, sep) {
+      // Strip UTF-8 BOM in its various shapes
+      if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.slice(1);
+      } else if (text.startsWith('ï»¿')) {
+        // Mis-decoded BOM (UTF-8 bytes read as Latin-1)
+        text = text.slice(3);
+      }
+
+      const rows = [];
+      let cur = '';
+      let row = [];
+      let inQuotes = false;
+      const len = text.length;
+      let i = 0;
+
+      while (i < len) {
+        const ch = text[i];
+        if (inQuotes) {
+          if (ch === '"') {
+            if (text[i + 1] === '"') { cur += '"'; i += 2; continue; }
+            inQuotes = false;
+            i++;
+          } else {
+            cur += ch;
+            i++;
+          }
+        } else {
+          if (ch === '"' && cur === '') { inQuotes = true; i++; }
+          else if (ch === sep) { row.push(cur); cur = ''; i++; }
+          else if (ch === '\r') { i++; }
+          else if (ch === '\n') {
+            row.push(cur); cur = '';
+            if (!(row.length === 1 && row[0] === '')) rows.push(row);
+            row = [];
+            i++;
+          } else {
+            cur += ch;
+            i++;
+          }
+        }
+      }
+      // Flush last cell / row when file has no trailing newline
+      if (cur !== '' || row.length > 0) {
+        row.push(cur);
+        if (!(row.length === 1 && row[0] === '')) rows.push(row);
+      }
+      return rows;
+    }
+
+    // Try to read a value as a number, tolerating "4,43" (comma decimals) and thousands dots.
+    function parseLocaleNumber(val) {
+      if (val === null || val === undefined) return NaN;
+      const s = String(val).trim();
+      if (s === '' || ERROR_VALUES.has(s.toUpperCase())) return NaN;
+      // Remove spaces; treat comma as decimal if no dot present, otherwise as thousand sep.
+      const hasDot = s.includes('.');
+      const hasComma = s.includes(',');
+      let cleaned = s.replace(/\s/g, '');
+      if (hasComma && !hasDot) cleaned = cleaned.replace(',', '.');
+      else if (hasComma && hasDot) cleaned = cleaned.replace(/,/g, '');
+      const n = Number(cleaned);
+      return isNaN(n) ? NaN : n;
+    }
+
+    // =======================
+    // SERVICE WORKER
+    // =======================
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => {
+          // Check if there's already a waiting worker
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              // Once installed, force update immediately
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
+        });
+
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+
+    // =======================
+    // LÓGICA DE DATOS
+    // =======================
+    async function initApp() {
+      checkConnection();
+      window.addEventListener('online', checkConnection);
+      window.addEventListener('offline', checkConnection);
+
+      applyViewStaticUi();  // title, placeholder, nav state, initial labels
+
+      try {
+        const response = await fetch(STATE.csvFile);
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+        const text = await readCsvResponse(response);
+        processData(text);
+        STATE.loaded = true;
+      } catch (error) {
+        console.error('Fallo carga:', error);
+        tryFallbackCache();
+      }
+    }
+
+    async function tryFallbackCache() {
+      try {
+        const cache = await caches.match(STATE.csvFile);
+        if (cache) {
+          const text = await cache.text();
+          processData(text);
+          STATE.loaded = true;
+          // Force logic to show offline banner even if navigator says online (cache mismatch)
+          document.getElementById('offlineBanner').classList.remove('hidden');
+        } else {
+          showError('No se pudieron cargar los datos.', 'Revisa tu conexión o asegúrate de haber abierto la app online al menos una vez.');
+        }
+      } catch (e) {
+        showError('Error Crítico', 'No se pudo acceder al almacenamiento local.');
+      }
+    }
+
+    function processData(csvText) {
+      if (!csvText.trim()) return showError('Datos Vacíos', `El archivo ${STATE.csvFile} está vacío.`);
+
+      // Detect separator from the first physical line by picking whichever
+      // candidate occurs most. Excel exports vary: ';' en configuración es-CO,
+      // pero "Texto delimitado por tabulaciones" produce '\t'. Ties favour ';'.
+      // Headers rarely contain quotes, so this heuristic is safe in practice.
+      const firstLineEnd = csvText.search(/\r?\n/);
+      const firstLine = firstLineEnd === -1 ? csvText : csvText.slice(0, firstLineEnd);
+      const separator = [';', '\t', ',']
+        .map(s => ({ s, n: firstLine.split(s).length - 1 }))
+        .reduce((best, c) => (c.n > best.n ? c : best)).s;
+
+      const allRows = parseCsvText(csvText, separator);
+      if (allRows.length < 2) return showError('Formato Inválido', 'El archivo no tiene cabeceras o datos.');
+
+      // A single-column header means no known separator matched: the file would
+      // otherwise render as one garbage column with no warning at all.
+      if (allRows[0].length < 2) {
+        return showError('Formato Inválido',
+          `No se reconoció el separador de columnas de ${STATE.csvFile}. Guárdalo como CSV delimitado por ";" en UTF-8.`);
+      }
+
+      STATE.headers = allRows[0].map(h => h.trim());
+
+      // View-specific row processing
+      if (STATE.processor === 'maestro') {
+        processRowsMaestro(allRows);
+      } else {
+        processRowsGeneric(allRows);
+      }
+
+      // Init View (shared)
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.getElementById('loadingMsg').classList.add('hidden');
+      document.getElementById('tableContainer').classList.remove('hidden');
+
+      // Force header rebuild (in case we switched views — headers differ)
+      const thead = document.querySelector('#maestro thead');
+      if (thead) thead.innerHTML = '';
+
+      // Accessible table caption with total count
+      const caption = document.getElementById('tableCaption');
+      if (caption) {
+        caption.textContent = `${STATE.captionBase} — ${STATE.rows.length} registros`;
+      }
+
+      setupScrollFade();
+      populateFilters();
+
+      // Restore persisted page-size preference (if any)
+      try {
+        const saved = parseInt(localStorage.getItem('pageSize') || '', 10);
+        if (saved > 0) {
+          CONFIG.pageSize = saved;
+          document.getElementById('pageSizeSelect').value = String(saved);
+        }
+      } catch (_) { /* ignore */ }
+
+      applyFiltersAndSort();
+    }
+
+    // Maestro-specific: compute "EDAD HOY MESES" per row from planting/cut dates.
+    function processRowsMaestro(allRows) {
+      const variedadIdx = STATE.headers.findIndex(h => h.toUpperCase().trim() === 'VARIEDAD');
+      const fechaSiembraIdx = STATE.headers.findIndex(h =>
+        h.toUpperCase().replace(/\s+/g, ' ').trim() === 'FECHA DE SIEMBRA' ||
+        (h.toUpperCase().includes('FECHA') && h.toUpperCase().includes('SIEMBRA'))
+      );
+      const fechaUltimoCorteIdx = STATE.headers.findIndex(h =>
+        h.toUpperCase().replace(/\s+/g, ' ').trim() === 'FECHA DE ULTIMO CORTE' ||
+        h.toUpperCase().replace(/\s+/g, ' ').trim() === 'FECHA DE ÚLTIMO CORTE' ||
+        (h.toUpperCase().includes('FECHA') && h.toUpperCase().includes('ULTIMO') && h.toUpperCase().includes('CORTE'))
+      );
+
+      const edadHoyIdx = STATE.headers.findIndex(h => {
+        const header = h.toUpperCase().trim();
+        return header === 'EDAD' ||
+          header === 'EDAD MESES' ||
+          (header.includes('EDAD') && !header.includes('VARIEDAD') && !header.includes('PROMEDIO'));
+      });
+
+      if (edadHoyIdx !== -1) {
+        STATE.edadColumnIndex = edadHoyIdx;
+      } else {
+        STATE.headers.push('EDAD HOY MESES');
+        STATE.edadColumnIndex = STATE.headers.length - 1;
+      }
+
+      // EMPRESA column — used by the ?empresa= scope filter (see COMPANY).
+      STATE.empresaColumnIndex = STATE.headers.findIndex(h => normalizeHeader(h) === 'EMPRESA');
+
+      STATE.rows = [];
+      const now = new Date();
+      for (let i = 1; i < allRows.length; i++) {
+        const cells = allRows[i];
+        if (cells.length <= 1) continue;
+        const row = cells.map(c => c.trim());
+        let edadMeses = '0.0';
+        try {
+          const variedad = variedadIdx > -1 ? row[variedadIdx].toUpperCase() : '';
+          const fechaSiembraStr = fechaSiembraIdx > -1 ? row[fechaSiembraIdx] : '';
+          const fechaCorteStr = fechaUltimoCorteIdx > -1 ? row[fechaUltimoCorteIdx] : '';
+          if (variedad === 'RENOVACION' || variedad === 'RENOVACIÓN') {
+            edadMeses = '0.0';
+          } else {
+            const fechaSiembra = parseDate(fechaSiembraStr);
+            const fechaCorte = parseDate(fechaCorteStr);
+            let fechaRef = fechaSiembra;
+            if (fechaCorte && fechaSiembra && fechaCorte > fechaSiembra) fechaRef = fechaCorte;
+            if (fechaRef) {
+              const diffTime = Math.abs(now - fechaRef);
+              const daysDiff = diffTime / (1000 * 60 * 60 * 24);
+              edadMeses = (daysDiff / (365.25 / 12)).toFixed(1);
+            }
+          }
+        } catch (e) { console.warn(e); }
+        if (edadHoyIdx !== -1) row[edadHoyIdx] = edadMeses;
+        else row.push(edadMeses);
+        STATE.rows.push(row);
+      }
+    }
+
+    // Generic: just trim cells and skip empty rows. No derived columns.
+    function processRowsGeneric(allRows) {
+      STATE.rows = [];
+      for (let i = 1; i < allRows.length; i++) {
+        const cells = allRows[i];
+        if (cells.length <= 1) continue;
+        STATE.rows.push(cells.map(c => c.trim()));
+      }
+      // edadColumnIndex is set later by populateMultiFilters using view config
+      STATE.edadColumnIndex = -1;
+    }
+
+    // Helper: Parse DD/MM/YYYY, YYYY-MM-DD, or an Excel serial date number.
+    // Some CSV exports (e.g. the Riopaila rows) store dates as Excel serials such
+    // as 44170 (= 2020-12-05), optionally with a fractional time-of-day part like
+    // 46354.25. Without this, parseDate returned null for those rows and the
+    // "EDAD HOY MESES" calculation fell back to 0.0.
+    function parseDate(dateStr) {
+      if (dateStr === null || dateStr === undefined) return null;
+      const s = String(dateStr).trim();
+      if (!s) return null;
+      // DD/MM/YYYY
+      if (s.includes('/')) {
+        const parts = s.split('/');
+        if (parts.length === 3) {
+          return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+      }
+      // YYYY-MM-DD (ISO)
+      if (s.includes('-')) {
+        return new Date(s);
+      }
+      // Excel serial date (1900 system; day 0 = 1899-12-30, accounting for the
+      // legacy 1900 leap-year bug). Accepts a comma or dot decimal separator.
+      const serial = Number(s.replace(',', '.'));
+      if (Number.isFinite(serial) && serial > 0) {
+        return new Date(Date.UTC(1899, 11, 30) + Math.round(serial * 86400000));
+      }
+      return null;
+    }
+
+    // Header looks like a date column ("FECHA DE SIEMBRA", "FECHA DEL PRÓXIMO CORTE", ...)
+    function isDateHeader(h) {
+      return /\bFECHA\b/i.test(h || '');
+    }
+
+    // Pretty-print a date cell as DD/MM/YYYY. Accepts Excel serials (44170),
+    // DD/MM/YYYY (passes through), or ISO YYYY-MM-DD. Returns the original
+    // string when the value is empty or unrecognized.
+    function formatDateDisplay(value) {
+      if (value === null || value === undefined) return value;
+      const s = String(value).trim();
+      if (!s) return value;
+      // Already DD/MM/YYYY — leave it alone
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) {
+        const [d, m, y] = s.split('/');
+        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+      }
+      // ISO YYYY-MM-DD (optionally with time)
+      const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+      // Excel serial (1900 system, accounting for the 1900 leap-year bug).
+      // Accepts comma or dot decimal separator and an optional time fraction.
+      const serial = Number(s.replace(',', '.'));
+      if (Number.isFinite(serial) && serial > 0) {
+        const d = new Date(Date.UTC(1899, 11, 30) + Math.round(serial * 86400000));
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getUTCDate()).padStart(2, '0');
+          const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+          const yyyy = d.getUTCFullYear();
+          return `${dd}/${mm}/${yyyy}`;
+        }
+      }
+      return value;
+    }
+
+    // =======================
+    // RENDERIZADO
+    // =======================
+    // Format a number in Colombian Spanish style (dot thousands, comma decimals).
+    // Returns '—' when the value is not a finite number.
+    function formatNumberEs(n, decimals) {
+      if (n === null || n === undefined || !Number.isFinite(n)) return '—';
+      const d = Number.isFinite(decimals) ? decimals : 0;
+      return n.toLocaleString('es-CO', { minimumFractionDigits: d, maximumFractionDigits: d });
+    }
+
+    // Build the totals row (tfoot) for the active view, aggregated over ALL
+    // filtered rows (STATE.filteredRows), independent of the current page.
+    // Driven by STATE.totalsConfig. Views without a totalsConfig (e.g. ZQM)
+    // render no row.
+    function renderTotals() {
+      const foot = document.getElementById('maestroFoot');
+      if (!foot) return;
+
+      const cfg = STATE.totalsConfig;
+      // No config (ZQM) or no rows in scope → no totals row.
+      if (!cfg || !STATE.filteredRows.length) {
+        foot.innerHTML = '';
+        return;
+      }
+
+      // Resolve a column index from a header name (tolerant matching).
+      const idxOf = (name) => {
+        const target = normalizeHeader(name);
+        return STATE.headers.findIndex(h => normalizeHeader(h) === target);
+      };
+
+      // Accumulate per metric, keyed by the column index it renders into.
+      const cellByIndex = {};
+      cfg.metrics.forEach(m => {
+        const colIdx = idxOf(m.col);
+        if (colIdx === -1) return;
+
+        let text = '—';
+        if (m.type === 'sum') {
+          let sum = 0, any = false;
+          for (const r of STATE.filteredRows) {
+            const v = parseLocaleNumber(r[colIdx]);
+            if (!isNaN(v)) { sum += v; any = true; }
+          }
+          if (any) text = `${formatNumberEs(sum, m.decimals)}${m.unit ? ' ' + m.unit : ''}`;
+        } else if (m.type === 'weightedAvg') {
+          const wIdx = idxOf(m.weightBy);
+          let num = 0, den = 0;
+          for (const r of STATE.filteredRows) {
+            const val = parseLocaleNumber(r[colIdx]);
+            const w = wIdx === -1 ? 1 : parseLocaleNumber(r[wIdx]);
+            if (!isNaN(val) && !isNaN(w)) { num += val * w; den += w; }
+          }
+          if (den > 0) {
+            const hint = m.hint ? `<span class="totals-hint">${escapeHtml(m.hint)}</span>` : '';
+            text = `${formatNumberEs(num / den, m.decimals)}${hint}`;
+          }
+        } else if (m.type === 'ratio') {
+          const ratio = (numName, denName) => {
+            const nIdx = idxOf(numName), dIdx = idxOf(denName);
+            if (nIdx === -1 || dIdx === -1) return NaN;
+            let n = 0, d = 0;
+            for (const r of STATE.filteredRows) {
+              const nv = parseLocaleNumber(r[nIdx]);
+              const dv = parseLocaleNumber(r[dIdx]);
+              if (!isNaN(nv)) n += nv;
+              if (!isNaN(dv)) d += dv;
+            }
+            return d > 0 ? n / d : NaN;
+          };
+          const primary = ratio(m.num, m.den);
+          text = formatNumberEs(primary, m.decimals);
+          if (m.secondary) {
+            const sec = ratio(m.secondary.num, m.secondary.den);
+            const secText = formatNumberEs(sec, m.decimals);
+            text += `<span class="totals-secondary">${escapeHtml(m.secondary.label)} ${secText}</span>`;
+          }
+        }
+        cellByIndex[colIdx] = text;
+      });
+
+      // Sticky identifier column(s) — same pinning logic as renderTable.
+      const stickies = (STATE.stickyCols || []).slice().sort((a, b) => a - b);
+      const lastSticky = stickies.length ? stickies[stickies.length - 1] : -1;
+      const labelCol = stickies.length ? stickies[0] : 0;
+
+      const tr = document.createElement('tr');
+      STATE.headers.forEach((_, index) => {
+        const td = document.createElement('td');
+        td.className = 'px-4 py-2.5 whitespace-nowrap totals-cell';
+
+        if (stickies.includes(index)) {
+          td.classList.add('sticky-col', `sticky-col-${index}`);
+          if (index === lastSticky) td.classList.add('sticky-col-last');
+        }
+
+        if (index === labelCol) {
+          td.classList.add('totals-label');
+          td.innerHTML =
+            `${escapeHtml(cfg.label)}<span class="totals-count">${STATE.filteredRows.length} suertes</span>`;
+        } else if (cellByIndex[index] !== undefined) {
+          td.classList.add('totals-value');
+          td.innerHTML = cellByIndex[index];
+        }
+        tr.appendChild(td);
+      });
+
+      foot.innerHTML = '';
+      foot.appendChild(tr);
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector('#maestro tbody');
+      const thead = document.querySelector('#maestro thead');
+
+      // Per-view set of sticky column indices, sorted ascending.
+      const stickies = (STATE.stickyCols || []).slice().sort((a, b) => a - b);
+      const lastSticky = stickies.length ? stickies[stickies.length - 1] : -1;
+
+      // Render Headers: rebuild when empty (first time or after view switch).
+      if (thead.rows.length === 0) {
+        thead.innerHTML = '';
+        const tr = document.createElement('tr');
+        STATE.headers.forEach((h, index) => {
+          const th = document.createElement('th');
+          th.className = "px-4 py-2.5 whitespace-nowrap tracking-wider font-bold shadow-sm sortable";
+          th.setAttribute('scope', 'col');
+          th.setAttribute('aria-sort', 'none');
+          th.style.color = "var(--table-header-text)";
+
+          // Sticky identifier columns: styled by CSS via .sticky-col + index.
+          if (stickies.includes(index)) {
+            th.classList.add('sticky-col', `sticky-col-${index}`);
+            if (index === lastSticky) th.classList.add('sticky-col-last');
+          } else {
+            th.style.background = "var(--table-header-bg)";
+          }
+
+          if (index === STATE.edadColumnIndex) {
+            th.style.color = "var(--success-text)";
+            th.style.borderBottom = "2px solid var(--success-bg)";
+          }
+
+          const label = document.createElement('span');
+          label.textContent = h;
+          const indicator = document.createElement('span');
+          indicator.className = 'sort-indicator material-symbols-outlined';
+          indicator.textContent = 'unfold_more';
+
+          th.appendChild(label);
+          th.appendChild(indicator);
+          th.addEventListener('click', () => toggleSort(index));
+
+          // Excel-style filter funnel on every column header. Clicking it opens
+          // the shared column-filter popover; it must not trigger the sort.
+          const funnel = document.createElement('button');
+          funnel.type = 'button';
+          funnel.className = 'col-filter-btn material-symbols-outlined';
+          funnel.dataset.col = index;
+          funnel.textContent = 'filter_alt';
+          funnel.setAttribute('aria-label', `Filtrar ${h}`);
+          funnel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const pop = document.getElementById('headerFilterPopover');
+            const isOpenSame = pop && !pop.classList.contains('hidden') && CURRENT_HEADER_COL === index;
+            if (isOpenSame) closeAllMultiPopovers();
+            else openHeaderFilter(index, funnel);
+          });
+          th.appendChild(funnel);
+
+          tr.appendChild(th);
+        });
+        thead.appendChild(tr);
+        // Sync sort indicators with stored sort state (e.g., when re-rendering
+        // headers after a view switch that had a sort applied).
+        updateSortIndicators();
+        updateHeaderFunnels();
+      }
+
+      // Pagination
+      const totalPages = Math.ceil(STATE.filteredRows.length / CONFIG.pageSize) || 1;
+      if (STATE.currentPage > totalPages) STATE.currentPage = 1;
+
+      const start = (STATE.currentPage - 1) * CONFIG.pageSize;
+      const pageData = STATE.filteredRows.slice(start, start + CONFIG.pageSize);
+
+      const CC = coordCols();
+      const fragment = document.createDocumentFragment();
+      pageData.forEach((row, i) => {
+        const filteredIdx = start + i;
+        const tr = document.createElement('tr');
+        tr.className = "transition-colors duration-150 group cursor-pointer border-b border-gray-700/20 hover-row";
+        tr.onclick = () => showRowDetails(filteredIdx);
+
+        row.forEach((cell, index) => {
+          const td = document.createElement('td');
+          td.className = "px-4 py-2.5 whitespace-nowrap transition-colors";
+
+          // Sticky identifier columns: CSS handles color/background.
+          if (stickies.includes(index)) {
+            td.classList.add('sticky-col', `sticky-col-${index}`);
+            if (index === lastSticky) td.classList.add('sticky-col-last');
+          } else {
+            td.style.color = "var(--text-muted)";
+          }
+
+          // Styling for Age Column
+          if (index === STATE.edadColumnIndex) {
+            td.style.color = "var(--success-text)";
+            td.style.fontWeight = "bold";
+            td.style.backgroundColor = "var(--success-bg)";
+          }
+
+          // Columna COORDENADAS: enlace 📍 a Rio Map (no texto crudo). Si no hay
+          // coordenada, cae al render genérico (celda vacía). El clic no abre el
+          // detalle de la fila (stopPropagation).
+          if (index === CC.coord && CC.coord !== -1) {
+            const coord = parseCoord(cell);
+            if (coord) {
+              const a = document.createElement('a');
+              a.href = rioMapUrl(coord, CC.empresa !== -1 ? row[CC.empresa] : '', CC.suerte !== -1 ? row[CC.suerte] : '');
+              a.target = '_blank';
+              a.rel = 'noopener';
+              a.className = 'riomap-link';
+              a.title = `Abrir en Rio Map (${coord.lat.toFixed(6)}, ${coord.lon.toFixed(6)})`;
+              a.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:-3px">location_on</span> Ubicación';
+              a.addEventListener('click', (e) => e.stopPropagation());
+              td.appendChild(a);
+              tr.appendChild(td);
+              return;
+            }
+          }
+
+          const sanitized = sanitizeCell(cell);
+          td.textContent = sanitized.isEmpty
+            ? sanitized.text
+            : (isDateHeader(STATE.headers[index]) ? formatDateDisplay(sanitized.text) : sanitized.text);
+          if (sanitized.isEmpty) {
+            td.classList.add('cell-empty');
+            if (sanitized.original) {
+              td.title = `Valor original: ${sanitized.original}`;
+            }
+          }
+
+          tr.appendChild(td);
+        });
+        fragment.appendChild(tr);
+      });
+
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
+
+      // Totals row (aggregated over all filtered rows, independent of page)
+      renderTotals();
+
+      // UI Updates
+      document.getElementById('pageInfo').textContent =
+        `PÁG ${STATE.currentPage} / ${totalPages}`;
+
+      document.getElementById('prevPage').disabled = STATE.currentPage === 1;
+      document.getElementById('nextPage').disabled = STATE.currentPage >= totalPages;
+
+      // Re-evaluate horizontal-scroll hint and sticky offsets after content swap
+      requestAnimationFrame(() => {
+        updateScrollFade();
+        updateStickyOffsets();
+      });
+    }
+
+    // =======================
+    // MOBILE FILTER DRAWER
+    // =======================
+    const MOBILE_MQ = window.matchMedia('(max-width: 767px)');
+
+    function isDrawerMode() {
+      return MOBILE_MQ.matches;
+    }
+
+    function openFilterDrawer() {
+      if (!isDrawerMode()) return;
+      const drawer = document.getElementById('filterDrawer');
+      const backdrop = document.getElementById('filterBackdrop');
+      const trigger = document.getElementById('filterTrigger');
+      drawer.classList.add('open');
+      backdrop.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('drawer-open');
+      // Focus first select for keyboard users
+      const first = drawer.querySelector('select, button:not([aria-label="Cerrar filtros"])');
+      if (first) first.focus();
+    }
+
+    function closeFilterDrawer() {
+      const drawer = document.getElementById('filterDrawer');
+      const backdrop = document.getElementById('filterBackdrop');
+      const trigger = document.getElementById('filterTrigger');
+      const wasOpen = drawer.classList.contains('open');
+      drawer.classList.remove('open');
+      backdrop.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('drawer-open');
+      if (wasOpen && isDrawerMode()) trigger.focus();
+    }
+
+    function toggleFilterDrawer() {
+      const drawer = document.getElementById('filterDrawer');
+      if (drawer.classList.contains('open')) closeFilterDrawer();
+      else openFilterDrawer();
+    }
+
+    function isFilterDrawerOpen() {
+      return document.getElementById('filterDrawer').classList.contains('open');
+    }
+
+    // When crossing from mobile to desktop, force-reset drawer state so nothing
+    // stays in a half-broken "open" layout.
+    MOBILE_MQ.addEventListener('change', (e) => {
+      if (!e.matches) {
+        document.getElementById('filterDrawer').classList.remove('open');
+        document.getElementById('filterBackdrop').classList.remove('open');
+        document.getElementById('filterTrigger').setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('drawer-open');
+      }
+    });
+
+    // =======================
+    // VIEW SWITCHING
+    // =======================
+    // Applies labels and placeholders that differ between views.
+    function applyViewStaticUi() {
+      const titleEl = document.getElementById('appTitleText');
+      if (titleEl) titleEl.innerHTML = STATE.appTitleHtml;
+
+      const modalTitleEl = document.getElementById('modalTitleText');
+      if (modalTitleEl && STATE.modalTitle) modalTitleEl.textContent = STATE.modalTitle;
+
+      const input = document.getElementById('searchInput');
+      if (input) input.placeholder = STATE.searchPlaceholder;
+
+      // Bottom nav active state
+      document.querySelectorAll('#bottomNav .nav-item').forEach(btn => {
+        const active = btn.dataset.view === CURRENT_VIEW_KEY;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+
+      // Initial "all" option labels (in case selects haven't been populated yet)
+      STATE.filterConfig.forEach(col => {
+        const s = document.getElementById(col.selectId);
+        if (s && s.options[0]) s.options[0].textContent = col.label;
+      });
+
+      applyDataUpdatedLabel();
+      updateCompanyUi();
+    }
+
+    // Fecha de los datos junto a la versión. Solo en Maestro: CONFIG.dataUpdated
+    // se refiere a maestro.csv, así que en ZQM sería una fecha equivocada.
+    // En pantallas angostas va la forma corta para no romper el encabezado.
+    function applyDataUpdatedLabel() {
+      const el = document.getElementById('dataUpdated');
+      if (!el) return;
+      const esMaestro = CURRENT_VIEW_KEY === 'maestro';
+      el.previousElementSibling.hidden = !esMaestro;   // el separador "·"
+      if (!esMaestro) { el.textContent = ''; el.removeAttribute('title'); return; }
+      el.innerHTML =
+        `<span class="sm:hidden">${escapeHtml(CONFIG.dataUpdatedShort)}</span>` +
+        `<span class="hidden sm:inline">Última actualización: ${escapeHtml(CONFIG.dataUpdated)}</span>`;
+      el.title = `Datos del maestro al ${CONFIG.dataUpdated}`;
+    }
+
+    // Show/hide the company-scope UI. Only the Maestro view is company-scoped;
+    // ZQM (no EMPRESA column) never shows it. The active company is shown as a
+    // compact chip in the results row; with no company, the amber prompt banner
+    // is shown instead.
+    function updateCompanyUi() {
+      const isMaestro = CURRENT_VIEW_KEY === 'maestro';
+      const chip = document.getElementById('companyChip');
+      const noBanner = document.getElementById('noCompanyBanner');
+      const nameEl = document.getElementById('companyChipName');
+      if (nameEl) nameEl.textContent = COMPANY.label || '—';
+      if (chip) chip.classList.toggle('hidden', !(isMaestro && COMPANY.active));
+      if (noBanner) noBanner.classList.toggle('hidden', !(isMaestro && !COMPANY.active));
+    }
+
+    // Persists current UI inputs into the active view's state before switching out.
+    function saveViewUiSnapshot() {
+      STATE.singleFilters = {};
+      STATE.filterConfig.forEach(col => {
+        const s = document.getElementById(col.selectId);
+        STATE.singleFilters[col.selectId] = s ? s.value : '';
+      });
+      const input = document.getElementById('searchInput');
+      STATE.searchValue = input ? input.value : '';
+    }
+
+    // Restores UI inputs from the (now-active) view's state.
+    // Options must already be populated before calling this.
+    function restoreViewUiSnapshot() {
+      STATE.filterConfig.forEach(col => {
+        const s = document.getElementById(col.selectId);
+        if (!s) return;
+        const saved = (STATE.singleFilters && STATE.singleFilters[col.selectId]) || '';
+        // Only restore if the value still exists among the repopulated options
+        const exists = Array.from(s.options).some(o => o.value === saved);
+        s.value = exists ? saved : '';
+      });
+      const input = document.getElementById('searchInput');
+      if (input) input.value = STATE.searchValue || '';
+    }
+
+    async function switchView(targetKey) {
+      if (targetKey === CURRENT_VIEW_KEY) return;
+      if (!VIEWS[targetKey]) return;
+
+      // Close transient UI (modal, drawer, popovers)
+      closeAllMultiPopovers();
+      if (isFilterDrawerOpen()) closeFilterDrawer();
+      const modal = document.getElementById('detailModal');
+      if (modal && !modal.classList.contains('hidden')) closeModal();
+
+      // Save current view's UI state, then swap the alias.
+      saveViewUiSnapshot();
+      CURRENT_VIEW_KEY = targetKey;
+      STATE = VIEWS[targetKey];
+
+      applyViewStaticUi();
+
+      // Force header rebuild on next renderTable
+      const thead = document.querySelector('#maestro thead');
+      if (thead) thead.innerHTML = '';
+      // Clear any stale totals row before the target view re-renders.
+      const tfoot = document.getElementById('maestroFoot');
+      if (tfoot) tfoot.innerHTML = '';
+
+      if (!STATE.loaded) {
+        // First time opening this view — fetch CSV lazily.
+        document.getElementById('tableContainer').classList.add('hidden');
+        const loadingEl = document.getElementById('loadingMsg');
+        loadingEl.classList.remove('hidden');
+        loadingEl.style.display = '';
+        try {
+          const response = await fetch(STATE.csvFile);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const text = await readCsvResponse(response);
+          // Abort if the user switched away while we were loading.
+          if (CURRENT_VIEW_KEY !== targetKey) return;
+          processData(text);  // processData calls populateFilters + applyFiltersAndSort
+          STATE.loaded = true;
+        } catch (err) {
+          console.error('[switchView] fallo carga', err);
+          if (CURRENT_VIEW_KEY === targetKey) tryFallbackCache();
+        }
+      } else {
+        // Already loaded: repopulate filter options from this view's data,
+        // restore saved select/search values, and re-render.
+        populateFilters();
+        restoreViewUiSnapshot();
+        applyFiltersAndSort();
+      }
+    }
+
+    function updateFilterBadge() {
+      let count = STATE.filterConfig.filter(c => {
+        const s = document.getElementById(c.selectId);
+        return s && s.value;
+      }).length;
+      Object.keys(STATE.multiFilters).forEach(k => {
+        if (STATE.multiFilters[k].size > 0) count++;
+      });
+      Object.keys(STATE.columnFilters).forEach(k => {
+        if (STATE.columnFilters[k].size > 0) count++;
+      });
+      const badge = document.getElementById('filterTriggerBadge');
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = String(count);
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    // Shows/hides the right-edge gradient to hint horizontal scroll is available.
+    function updateScrollFade() {
+      const scroller = document.getElementById('tableScroll');
+      const fade = document.getElementById('scrollFadeRight');
+      if (!scroller || !fade) return;
+      const remaining = scroller.scrollWidth - scroller.clientWidth - scroller.scrollLeft;
+      fade.classList.toggle('visible', remaining > 8);
+    }
+
+    // Measure widths of pinned columns and publish --sticky-left-N CSS vars
+    // so columns 1, 2, ... start right after the cumulative width of prior
+    // pinned columns. Called after every render and on resize.
+    function updateStickyOffsets() {
+      const stickies = (STATE.stickyCols || []).slice().sort((a, b) => a - b);
+      if (stickies.length <= 1) return;
+      const ths = document.querySelectorAll('#maestro thead th');
+      if (!ths.length) return;
+      let cumLeft = 0;
+      stickies.forEach(idx => {
+        document.documentElement.style.setProperty(`--sticky-left-${idx}`, `${cumLeft}px`);
+        const th = ths[idx];
+        if (th) cumLeft += th.getBoundingClientRect().width;
+      });
+    }
+
+    function setupScrollFade() {
+      const scroller = document.getElementById('tableScroll');
+      if (!scroller) return;
+      scroller.addEventListener('scroll', updateScrollFade, { passive: true });
+      // The column-header popover is fixed-positioned, so keep it pinned to its
+      // funnel as the table scrolls. We reposition instead of closing because on
+      // mobile, tapping the search box opens the soft keyboard, which reflows the
+      // viewport and fires a spurious scroll event — closing here would dismiss
+      // the popover before you could type. We only close if the funnel scrolls
+      // out of the table's horizontal viewport (and never while typing in it).
+      scroller.addEventListener('scroll', reflowHeaderPopover, { passive: true });
+      window.addEventListener('resize', () => {
+        updateScrollFade();
+        updateStickyOffsets();
+        reflowHeaderPopover();
+      });
+      requestAnimationFrame(updateScrollFade);
+      requestAnimationFrame(updateStickyOffsets);
+    }
+
+    // =======================
+    // FILTROS / ORDEN / EXPORT
+    // =======================
+    // Baseline rows for the active view BEFORE user filters. The Maestro view is
+    // scoped to the company chosen on the home screen (COMPANY); ZQM is never
+    // company-scoped. Used to populate filter options — so each company only sees
+    // its own values (e.g. its real maximum age) — and as the search baseline.
+    function getScopedRows() {
+      if (CURRENT_VIEW_KEY === 'maestro') {
+        if (!COMPANY.active) return [];
+        if (STATE.empresaColumnIndex !== -1) {
+          return STATE.rows.filter(r =>
+            COMPANY.set.has((r[STATE.empresaColumnIndex] || '').trim().toUpperCase()));
+        }
+      }
+      return STATE.rows;
+    }
+
+    function populateFilters() {
+      const scoped = getScopedRows();
+      STATE.filterConfig.forEach(col => {
+        // match receives raw header; match fn normalizes internally.
+        const idx = STATE.headers.findIndex(h => col.match(h));
+        col.index = idx;
+        const select = document.getElementById(col.selectId);
+        if (!select) return;
+
+        // Refresh the "all" option label from the active view's config.
+        if (select.options[0]) select.options[0].textContent = col.label;
+
+        if (idx === -1) {
+          select.style.display = 'none';
+          return;
+        }
+        select.style.display = '';
+
+        const values = [...new Set(
+          scoped
+            .map(r => (r[idx] || '').trim())
+            .filter(v => v !== '' && !ERROR_VALUES.has(v.toUpperCase()))
+        )].sort((a, b) => a.localeCompare(b, 'es', { numeric: true }));
+
+        // Clear any stale dynamic options but keep the "all" option (index 0).
+        while (select.options.length > 1) select.remove(1);
+
+        for (const v of values) {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          select.appendChild(opt);
+        }
+      });
+
+      populateMultiFilters();
+    }
+
+    function populateMultiFilters() {
+      const scoped = getScopedRows();
+      // Corte: integer values; column name per view config.
+      const cfgC = STATE.multiConfig.corte;
+      const corteIdx = cfgC && cfgC.match ? STATE.headers.findIndex(cfgC.match) : -1;
+      STATE.corteColumnIndex = corteIdx;
+      const corteContainer = document.querySelector('.filter-multi[data-key="corte"]');
+      if (corteIdx === -1) {
+        if (corteContainer) corteContainer.style.display = 'none';
+      } else {
+        if (corteContainer) corteContainer.style.display = '';
+        const values = [...new Set(
+          scoped.map(r => {
+            const v = String(r[corteIdx] || '').trim();
+            const n = parseInt(v, 10);
+            return isNaN(n) ? null : n;
+          }).filter(n => n !== null)
+        )].sort((a, b) => a - b);
+        renderMultiOptions('corte', values.map(v => ({ value: v, label: `Corte ${v}` })));
+      }
+
+      // Edad: bucket by floor(value). For maestro, uses the calculated column
+      // set by the processor. For ZQM, we look up the raw "EDAD" column here.
+      const cfgE = STATE.multiConfig.edad;
+      let edadIdx;
+      if (cfgE && cfgE.useCalculated) {
+        edadIdx = STATE.edadColumnIndex;
+      } else if (cfgE && cfgE.match) {
+        edadIdx = STATE.headers.findIndex(cfgE.match);
+        STATE.edadColumnIndex = edadIdx;
+      } else {
+        edadIdx = -1;
+      }
+      const edadContainer = document.querySelector('.filter-multi[data-key="edad"]');
+      if (edadIdx === -1) {
+        if (edadContainer) edadContainer.style.display = 'none';
+      } else {
+        if (edadContainer) edadContainer.style.display = '';
+        // Toolbar "Edad": group by floor(value) into "x–x+1 meses". Only floors
+        // present in the scoped (company) rows are listed, so the ranges stop at
+        // that company's real maximum age.
+        const buckets = [...new Set(
+          scoped.map(r => {
+            const v = parseFloat(String(r[edadIdx] || '').replace(',', '.'));
+            return isNaN(v) ? null : Math.floor(v);
+          }).filter(n => n !== null)
+        )].sort((a, b) => a - b);
+        renderMultiOptions('edad', buckets.map(v => ({
+          value: v,
+          label: `${v}–${v + 1} meses`
+        })));
+      }
+    }
+
+    function renderMultiOptions(key, options) {
+      const container = document.getElementById(`${key}Options`);
+      if (!container) return;
+      container.innerHTML = '';
+      options.forEach(opt => {
+        const label = document.createElement('label');
+        label.className = 'popover-option';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = String(opt.value);
+        input.dataset.multi = key;
+        // Values are stored as strings so decimal ages (e.g. "9.3") survive.
+        // Preserve selection when repopulating (e.g., after view switch).
+        input.checked = STATE.multiFilters[key].has(String(opt.value));
+        input.addEventListener('change', (e) => {
+          const v = e.target.value;
+          if (e.target.checked) STATE.multiFilters[key].add(v);
+          else STATE.multiFilters[key].delete(v);
+          updateMultiLabel(key);
+          applyFiltersAndSort();
+        });
+
+        const span = document.createElement('span');
+        span.textContent = opt.label;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+      updateMultiLabel(key);
+    }
+
+    function updateMultiLabel(key) {
+      const container = document.querySelector(`.filter-multi[data-key="${key}"]`);
+      if (!container) return;
+      const countEl = container.querySelector('.filter-multi-count');
+      const size = STATE.multiFilters[key].size;
+      const cfg = STATE.multiConfig && STATE.multiConfig[key];
+      const allLabel = (cfg && cfg.allLabel) || 'Todos';
+      if (size === 0) {
+        container.classList.remove('active');
+        countEl.textContent = allLabel;
+      } else {
+        container.classList.add('active');
+        countEl.textContent = String(size);
+      }
+      // Also update the button label from config (e.g., "Edad" / "Corte")
+      const labelEl = container.querySelector('.filter-multi-label');
+      if (labelEl && cfg && cfg.label) labelEl.textContent = cfg.label;
+    }
+
+    function toggleMultiPopover(key) {
+      const popover = document.getElementById(`${key}Popover`);
+      const trigger = document.querySelector(`.filter-multi[data-key="${key}"] .filter-multi-trigger`);
+      const isOpen = !popover.classList.contains('hidden');
+
+      closeAllMultiPopovers();
+
+      if (!isOpen) {
+        popover.classList.remove('hidden');
+        trigger.setAttribute('aria-expanded', 'true');
+        // Reset the search box (if any) so all options are visible on open.
+        const search = popover.querySelector('.popover-search');
+        if (search) { search.value = ''; filterMultiOptions(key, ''); }
+      }
+    }
+
+    function closeAllMultiPopovers() {
+      document.querySelectorAll('.filter-multi-popover').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.filter-multi-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+
+    // =======================
+    // COLUMN HEADER FILTERS (Excel-style, generic for every column)
+    // =======================
+    // Each header funnel opens a shared popover listing the distinct values of
+    // that column (from the company-scoped rows). Selections live in
+    // STATE.columnFilters[colIndex] (Set of canonical display strings) and
+    // combine (AND) with each other and with the toolbar filters.
+    let CURRENT_HEADER_COL = -1;
+
+    // Canonical display string for a cell — identical to what renderTable shows,
+    // so options always match the visible values. Empty/error cells become "—".
+    function cellDisplayValue(colIndex, raw) {
+      const s = sanitizeCell(raw);
+      if (s.isEmpty) return '—';
+      return isDateHeader(STATE.headers[colIndex]) ? formatDateDisplay(s.text) : s.text;
+    }
+
+    // Sort comparator for a column's distinct values (numeric / date / text
+    // aware). The empty sentinel "—" always sorts last.
+    function compareColValues(colIndex, a, b) {
+      if (a === b) return 0;
+      if (a === '—') return 1;
+      if (b === '—') return -1;
+      if (isDateHeader(STATE.headers[colIndex])) {
+        const da = parseDate(a), db = parseDate(b);
+        if (da && db) return da - db;
+      }
+      const na = parseLocaleNumber(a), nb = parseLocaleNumber(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return String(a).localeCompare(String(b), 'es', { numeric: true });
+    }
+
+    function openHeaderFilter(colIndex, btn) {
+      const pop = document.getElementById('headerFilterPopover');
+      if (!pop || !btn) return;
+      closeAllMultiPopovers();
+      CURRENT_HEADER_COL = colIndex;
+      if (!STATE.columnFilters[colIndex]) STATE.columnFilters[colIndex] = new Set();
+
+      // Options reflect every OTHER active filter (cross-filtering): selecting an
+      // age range, another column, or a search narrows what this list shows. The
+      // column's own current selections are always included so they stay
+      // visible/uncheckable even if other filters would otherwise hide them.
+      const set = STATE.columnFilters[colIndex];
+      const avail = new Set(
+        computeFilteredRows(colIndex).map(r => cellDisplayValue(colIndex, r[colIndex]))
+      );
+      set.forEach(v => avail.add(v));
+      const values = [...avail].sort((a, b) => compareColValues(colIndex, a, b));
+      renderHeaderFilterOptions(colIndex, values);
+
+      const search = pop.querySelector('.popover-search');
+      if (search) { search.value = ''; filterMultiOptions('headerFilter', ''); }
+
+      pop.classList.remove('hidden');
+      positionHeaderPopover(pop, btn);
+    }
+
+    function renderHeaderFilterOptions(colIndex, values) {
+      const container = document.getElementById('headerFilterOptions');
+      if (!container) return;
+      const set = STATE.columnFilters[colIndex] || new Set();
+      const frag = document.createDocumentFragment();
+      values.forEach(val => {
+        const label = document.createElement('label');
+        label.className = 'popover-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = val;
+        input.checked = set.has(val);
+        input.addEventListener('change', (e) => {
+          if (e.target.checked) set.add(e.target.value);
+          else set.delete(e.target.value);
+          STATE.columnFilters[colIndex] = set;
+          updateHeaderFunnels();
+          applyFiltersAndSort();
+        });
+        const span = document.createElement('span');
+        span.textContent = val;
+        label.appendChild(input);
+        label.appendChild(span);
+        frag.appendChild(label);
+      });
+      container.innerHTML = '';
+      container.appendChild(frag);
+    }
+
+    function headerFilterSelectAll() {
+      if (CURRENT_HEADER_COL === -1) return;
+      const set = STATE.columnFilters[CURRENT_HEADER_COL] || (STATE.columnFilters[CURRENT_HEADER_COL] = new Set());
+      set.clear();
+      document.querySelectorAll('#headerFilterOptions input[type="checkbox"]').forEach(cb => {
+        cb.checked = true; set.add(cb.value);
+      });
+      updateHeaderFunnels();
+      applyFiltersAndSort();
+    }
+
+    function headerFilterClear() {
+      if (CURRENT_HEADER_COL === -1) return;
+      const set = STATE.columnFilters[CURRENT_HEADER_COL];
+      if (set) set.clear();
+      document.querySelectorAll('#headerFilterOptions input[type="checkbox"]').forEach(cb => cb.checked = false);
+      updateHeaderFunnels();
+      applyFiltersAndSort();
+    }
+
+    // Highlight the funnels of columns that currently have an active filter.
+    function updateHeaderFunnels() {
+      document.querySelectorAll('.col-filter-btn').forEach(btn => {
+        const i = parseInt(btn.dataset.col, 10);
+        const set = STATE.columnFilters[i];
+        btn.classList.toggle('active', !!(set && set.size > 0));
+      });
+    }
+
+    // Position the shared popover (fixed) under the funnel, kept within the
+    // viewport (flips above the funnel if it would overflow the bottom).
+    function positionHeaderPopover(pop, btn) {
+      const r = btn.getBoundingClientRect();
+      const popW = pop.offsetWidth || 240;
+      const popH = pop.offsetHeight || 280;
+      const left = Math.max(8, Math.min(r.left, window.innerWidth - popW - 8));
+      let top = r.bottom + 4;
+      if (top + popH > window.innerHeight - 8) top = Math.max(8, r.top - popH - 4);
+      pop.style.left = `${Math.round(left)}px`;
+      pop.style.top = `${Math.round(top)}px`;
+    }
+
+    // Keep the open (fixed) column-header popover pinned to its funnel on scroll /
+    // resize — or close it if the funnel scrolled out of the table's horizontal
+    // viewport. It never closes while its search box is focused: on mobile the soft
+    // keyboard fires spurious scroll/resize events that would otherwise dismiss the
+    // popover the instant you tapped "Buscar", before you could type.
+    function reflowHeaderPopover() {
+      const pop = document.getElementById('headerFilterPopover');
+      if (!pop || pop.classList.contains('hidden')) return;
+      const scroller = document.getElementById('tableScroll');
+      const funnel = document.querySelector(`.col-filter-btn[data-col="${CURRENT_HEADER_COL}"]`);
+      if (!funnel || !scroller) { closeAllMultiPopovers(); return; }
+      const fr = funnel.getBoundingClientRect();
+      const sr = scroller.getBoundingClientRect();
+      const funnelVisible = fr.right >= sr.left && fr.left <= sr.right;
+      if (funnelVisible || pop.contains(document.activeElement)) positionHeaderPopover(pop, funnel);
+      else closeAllMultiPopovers();
+    }
+
+    // Filter the visible options inside a multi-select popover by text (search box).
+    // Only affects what's shown; it does not change the current selection.
+    function filterMultiOptions(key, term) {
+      const t = (term || '').trim().toLowerCase();
+      const container = document.getElementById(`${key}Options`);
+      if (!container) return;
+      container.querySelectorAll('.popover-option').forEach(opt => {
+        const txt = (opt.textContent || '').toLowerCase();
+        opt.style.display = (!t || txt.includes(t)) ? '' : 'none';
+      });
+    }
+
+    function selectAllMulti(key) {
+      const options = document.querySelectorAll(`#${key}Options input[type="checkbox"]`);
+      STATE.multiFilters[key].clear();
+      options.forEach(cb => {
+        cb.checked = true;
+        STATE.multiFilters[key].add(cb.value);
+      });
+      updateMultiLabel(key);
+      applyFiltersAndSort();
+    }
+
+    function clearMulti(key) {
+      const options = document.querySelectorAll(`#${key}Options input[type="checkbox"]`);
+      STATE.multiFilters[key].clear();
+      options.forEach(cb => { cb.checked = false; });
+      updateMultiLabel(key);
+      applyFiltersAndSort();
+    }
+
+    // Close any open multi-filter popover when clicking outside. The column
+    // header popover lives outside the toolbar, so allow clicks inside it
+    // (and on any header funnel button) without closing.
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.filter-multi') &&
+          !e.target.closest('#headerFilterPopover') &&
+          !e.target.closest('.col-filter-btn')) {
+        closeAllMultiPopovers();
+      }
+    });
+
+    // Apply every active filter to the scoped rows. `excludeCol` (a column index,
+    // or -1 for none) skips that column's OWN header filter — used to build that
+    // column's dropdown so its options reflect every OTHER active filter
+    // (Excel-style cross-filtering: e.g. an age range narrows the other lists).
+    function computeFilteredRows(excludeCol) {
+      const term = (document.getElementById('searchInput').value || '').toLowerCase();
+      let rows = getScopedRows();
+
+      // Toolbar single-select filters (zona / finca / variedad / uso)
+      STATE.filterConfig.forEach(col => {
+        if (col.index === -1) return;
+        const select = document.getElementById(col.selectId);
+        const value = select ? select.value : '';
+        if (!value) return;
+        rows = rows.filter(r => (r[col.index] || '').trim() === value);
+      });
+
+      // Toolbar multi-filter: Número de corte
+      if (STATE.corteColumnIndex !== -1 && STATE.multiFilters.corte.size > 0) {
+        const idx = STATE.corteColumnIndex;
+        rows = rows.filter(r => {
+          const n = parseInt(String(r[idx] || '').trim(), 10);
+          return !isNaN(n) && STATE.multiFilters.corte.has(String(n));
+        });
+      }
+
+      // Toolbar multi-filter: Edad ranges (floor buckets)
+      if (STATE.edadColumnIndex !== -1 && STATE.multiFilters.edad.size > 0) {
+        const idx = STATE.edadColumnIndex;
+        rows = rows.filter(r => {
+          const v = parseFloat(String(r[idx] || '').replace(',', '.'));
+          return !isNaN(v) && STATE.multiFilters.edad.has(String(Math.floor(v)));
+        });
+      }
+
+      // Per-column header filters (AND), skipping the excluded column's own filter.
+      for (const key in STATE.columnFilters) {
+        const set = STATE.columnFilters[key];
+        const ci = parseInt(key, 10);
+        if (set && set.size > 0 && ci !== excludeCol) {
+          rows = rows.filter(r => set.has(cellDisplayValue(ci, r[ci])));
+        }
+      }
+
+      // Global text search
+      if (term) {
+        rows = rows.filter(row => row.some(cell => (cell || '').toLowerCase().includes(term)));
+      }
+      return rows;
+    }
+
+    function applyFiltersAndSort() {
+      const term = (document.getElementById('searchInput').value || '').toLowerCase();
+
+      // Reflect active state on the toolbar selects (visual highlight).
+      STATE.filterConfig.forEach(col => {
+        const s = document.getElementById(col.selectId);
+        if (s) s.dataset.active = s.value ? 'true' : 'false';
+      });
+
+      // Baseline count for the active scope (company), used by the "X de Y" counter.
+      const scopedTotal = getScopedRows().length;
+
+      // Apply all active filters.
+      let rows = computeFilteredRows(-1);
+
+      // Sort
+      if (STATE.sortColumn !== -1) {
+        const col = STATE.sortColumn;
+        const dir = STATE.sortDirection === 'asc' ? 1 : -1;
+        rows = [...rows].sort((a, b) => {
+          const av = a[col];
+          const bv = b[col];
+          const aEmpty = av === undefined || av === null || String(av).trim() === '';
+          const bEmpty = bv === undefined || bv === null || String(bv).trim() === '';
+          // Push empty/error to the end regardless of direction
+          if (aEmpty && bEmpty) return 0;
+          if (aEmpty) return 1;
+          if (bEmpty) return -1;
+
+          const an = parseLocaleNumber(av);
+          const bn = parseLocaleNumber(bv);
+          if (!isNaN(an) && !isNaN(bn)) return (an - bn) * dir;
+
+          const ad = parseDate(av);
+          const bd = parseDate(bv);
+          if (ad && bd) return (ad - bd) * dir;
+
+          return String(av).localeCompare(String(bv), 'es', { numeric: true }) * dir;
+        });
+      }
+
+      STATE.filteredRows = rows;
+      STATE.currentPage = 1;
+
+      // Toggle clear-filters button
+      const anyActive = !!term
+        || STATE.filterConfig.some(c => {
+          const s = document.getElementById(c.selectId);
+          return s && s.value;
+        })
+        || Object.keys(STATE.multiFilters).some(k => STATE.multiFilters[k].size > 0)
+        || Object.keys(STATE.columnFilters).some(k => STATE.columnFilters[k].size > 0);
+      document.getElementById('clearFilters').classList.toggle('hidden', !anyActive);
+
+      // Update results count
+      const countEl = document.getElementById('resultCount');
+      if (countEl) {
+        countEl.textContent = anyActive
+          ? `${STATE.filteredRows.length} de ${scopedTotal}`
+          : `${scopedTotal}`;
+      }
+
+      updateFilterBadge();
+
+      renderTable();
+    }
+
+    function clearAllFilters() {
+      document.getElementById('searchInput').value = '';
+      STATE.filterConfig.forEach(col => {
+        const s = document.getElementById(col.selectId);
+        if (s) s.value = '';
+      });
+      Object.keys(STATE.multiFilters).forEach(key => {
+        STATE.multiFilters[key].clear();
+        document.querySelectorAll(`#${key}Options input[type="checkbox"]`).forEach(cb => cb.checked = false);
+        updateMultiLabel(key);
+      });
+      // Clear all Excel-style per-column header filters too.
+      STATE.columnFilters = {};
+      updateHeaderFunnels();
+      applyFiltersAndSort();
+    }
+
+    function toggleSort(columnIndex) {
+      if (STATE.sortColumn === columnIndex) {
+        if (STATE.sortDirection === 'asc') {
+          STATE.sortDirection = 'desc';
+        } else {
+          // Third click: reset to natural order
+          STATE.sortColumn = -1;
+          STATE.sortDirection = 'asc';
+        }
+      } else {
+        STATE.sortColumn = columnIndex;
+        STATE.sortDirection = 'asc';
+      }
+      updateSortIndicators();
+      applyFiltersAndSort();
+    }
+
+    function updateSortIndicators() {
+      document.querySelectorAll('#maestro thead th').forEach((th, i) => {
+        const ind = th.querySelector('.sort-indicator');
+        if (!ind) return;
+        if (STATE.sortColumn === i) {
+          ind.textContent = STATE.sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward';
+          ind.classList.add('active');
+          th.setAttribute('aria-sort', STATE.sortDirection === 'asc' ? 'ascending' : 'descending');
+        } else {
+          ind.textContent = 'unfold_more';
+          ind.classList.remove('active');
+          th.setAttribute('aria-sort', 'none');
+        }
+      });
+    }
+
+    function exportCSV() {
+      if (!STATE.filteredRows.length) {
+        alert('No hay datos para exportar.');
+        return;
+      }
+      const sep = ';';
+      const needsQuote = /[";\r\n]/;
+      const escape = v => {
+        const s = v === null || v === undefined ? '' : String(v);
+        return needsQuote.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [
+        STATE.headers.map(escape).join(sep),
+        ...STATE.filteredRows.map(r =>
+          STATE.headers.map((_, i) => escape(r[i])).join(sep)
+        )
+      ];
+      // UTF-8 BOM so Excel detects encoding correctly
+      const csv = '﻿' + lines.join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const today = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `${STATE.exportPrefix || 'datos'}-${today}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // =======================
+    // EVENTOS
+    // =======================
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(applyFiltersAndSort, 250);
+    });
+
+    STATE.filterConfig.forEach(col => {
+      const s = document.getElementById(col.selectId);
+      if (s) s.addEventListener('change', applyFiltersAndSort);
+    });
+
+    document.getElementById('clearFilters').addEventListener('click', clearAllFilters);
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      exportCSV();
+      // Close the drawer in mobile so the user sees the download feedback
+      if (isDrawerMode() && isFilterDrawerOpen()) closeFilterDrawer();
+    });
+
+    document.getElementById('pageSizeSelect').addEventListener('change', (e) => {
+      const n = parseInt(e.target.value, 10);
+      if (n > 0) {
+        CONFIG.pageSize = n;
+        try { localStorage.setItem('pageSize', String(n)); } catch (_) { /* ignore */ }
+        STATE.currentPage = 1;
+        renderTable();
+      }
+    });
+
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (STATE.currentPage > 1) {
+        STATE.currentPage--;
+        renderTable();
+      }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', () => {
+      const totalPages = Math.ceil(STATE.filteredRows.length / CONFIG.pageSize);
+      if (STATE.currentPage < totalPages) {
+        STATE.currentPage++;
+        renderTable();
+      }
+    });
+
+    function checkConnection() {
+      const banner = document.getElementById('offlineBanner');
+      const miniStatus = document.getElementById('miniStatus');
+
+      if (navigator.onLine) {
+        banner.classList.add('hidden');
+        if (miniStatus) {
+          miniStatus.querySelector('div').className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+          miniStatus.querySelector('span').textContent = 'Online';
+        }
+      } else {
+        banner.classList.remove('hidden');
+        if (miniStatus) {
+          miniStatus.querySelector('div').className = 'w-2 h-2 rounded-full bg-amber-500';
+          miniStatus.querySelector('span').textContent = 'Offline';
+        }
+      }
+    }
+
+    function showError(title, msg) {
+      document.getElementById('loadingMsg').classList.add('hidden');
+      const el = document.getElementById('errorMsg');
+      el.innerHTML = `
+        <div class="flex flex-col items-center gap-4">
+          <div class="p-3 bg-red-500/20 rounded-full">
+            <span class="material-symbols-outlined text-red-400 text-3xl">error</span>
+          </div>
+          <div class="space-y-1">
+             <h3 class="text-lg font-bold text-white">${title}</h3>
+             <p class="text-slate-300 text-sm">${msg}</p>
+          </div>
+          <button onclick="location.reload()" class="mt-2 px-6 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-lg shadow-red-600/20 font-semibold transition-all">
+            Reintentar
+          </button>
+        </div>
+      `;
+      el.classList.remove('hidden');
+    }
+
+    // =======================
+    // MODAL
+    // =======================
+    // Per-view KPI renderer dispatch. Falls back to the field-list layout
+    // for views that don't define a custom KPI renderer.
+    const MODAL_KPI_RENDERERS = {
+      maestro: (row, content) => renderModalListMaestro(row, content),
+      zqm:     (row, content) => renderModalKpiZqm(row, content)
+    };
+
+    function renderModalContent(row) {
+      const content = document.getElementById('modalContent');
+      content.innerHTML = '';
+      // Reset to default grid; KPI renderers override the class.
+      content.className = 'grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2';
+
+      const renderer = STATE.modalRenderer === 'kpi'
+        ? (MODAL_KPI_RENDERERS[STATE.key] || renderModalDefault)
+        : renderModalDefault;
+      renderer(row, content);
+    }
+
+    // Default: every header → labeled card. Used by Maestro.
+    function renderModalDefault(row, content) {
+      STATE.headers.forEach((header, i) => {
+        const sanitized = sanitizeCell(row[i]);
+
+        const div = document.createElement('div');
+        div.className = "sm:col-span-1 p-3 rounded-lg border transition-colors";
+        div.style.backgroundColor = "var(--input-bg)";
+        div.style.borderColor = "var(--glass-border)";
+
+        const dt = document.createElement('dt');
+        dt.className = "text-xs font-bold uppercase tracking-wide mb-1";
+        dt.style.color = "var(--table-header-text)";
+        dt.textContent = header;
+
+        const dd = document.createElement('dd');
+        dd.className = "mt-1 text-sm break-words font-medium";
+        dd.style.color = "var(--text-main)";
+        dd.textContent = sanitized.isEmpty
+          ? sanitized.text
+          : (isDateHeader(header) ? formatDateDisplay(sanitized.text) : sanitized.text);
+        if (sanitized.isEmpty) {
+          dd.classList.add('cell-empty');
+          if (sanitized.original) {
+            dd.title = `Valor original: ${sanitized.original}`;
+          }
+        }
+
+        div.appendChild(dt);
+        div.appendChild(dd);
+        content.appendChild(div);
+      });
+    }
+
+    // KPI dashboard: groups metrics into Identificación / Características /
+    // Productividad / Calidad / Producción de Azúcar. Used by ZQM.
+    function renderModalKpiZqm(row, content) {
+      // Use a single-column container; KPI sub-grids handle their own layout.
+      content.className = 'kpi-modal';
+
+      const headers = STATE.headers;
+      // Build a normalized-header → first-index map; helper finds Nth match.
+      const findIdx = (norm, occurrence) => {
+        let count = 0;
+        for (let i = 0; i < headers.length; i++) {
+          if (normalizeHeader(headers[i]) === norm) {
+            if (count === (occurrence || 0)) return i;
+            count++;
+          }
+        }
+        return -1;
+      };
+      const findIdxStarts = (prefix) =>
+        headers.findIndex(h => normalizeHeader(h).startsWith(prefix));
+
+      // Resolve cell value by matchers (returns sanitized text or '—')
+      const getByIdx = (idx) => idx === -1 ? '—' : sanitizeCell(row[idx]).text;
+      const getFirst = (...norms) => {
+        for (const n of norms) {
+          const i = findIdx(n);
+          if (i !== -1) return getByIdx(i);
+        }
+        return '—';
+      };
+
+      // Identification
+      const ano   = getFirst('AÑO', 'ANO', 'AÃO');
+      const mes   = getFirst('MES');
+      const ubic  = getByIdx(findIdxStarts('UBIC'));
+      const sector = getFirst('SECTOR');
+      const corte  = getFirst('CORTE');
+
+      // Characteristics
+      const area = getFirst('AREA');
+      const edad = getFirst('EDAD');
+
+      // Productivity
+      const tcMes   = getFirst('TC-MES', 'TC MES');
+      const tcTotal = getFirst('TC-TOTAL', 'TC TOTAL');
+      const tch     = getFirst('TCH');
+      const tchm    = getFirst('TCHM');
+
+      // Quality
+      const brix       = getFirst('BRIX');
+      const sacarosa   = getFirst('SACAROSA');
+      const pureza     = getFirst('PUREZA');
+      const rendimient = getFirst('RENDIMIENT', 'RENDIMIENTO');
+
+      // Sugar production: header has duplicate "TON.AZUCAR"; use occurrence-based lookup.
+      const idxTonAz1 = findIdx('TON.AZUCAR', 0);
+      const idxTonAz2 = findIdx('TON.AZUCAR', 1);
+      const idxTahm   = findIdx('TON.AZUCAR (TAHM)', 0);
+      const tonAz = getByIdx(idxTonAz1);
+      const tah   = getByIdx(idxTonAz2);
+      const tahm  = getByIdx(idxTahm);
+
+      // Build markup
+      content.innerHTML = `
+        <div class="kpi-header">
+          <div class="kpi-suerte">${escapeHtml(ubic)}</div>
+          <div class="kpi-sector">${escapeHtml(sector)}</div>
+          <div class="kpi-date">
+            <span class="material-symbols-outlined">event</span>
+            Mes ${escapeHtml(mes)} · ${escapeHtml(ano)}
+            <span class="kpi-date-sep">·</span>
+            <span class="material-symbols-outlined">content_cut</span>
+            Corte ${escapeHtml(corte)}
+          </div>
+        </div>
+        <div class="kpi-section">
+          <div class="kpi-section-title">Características</div>
+          <div class="kpi-grid">
+            ${kpiCard('square_foot', area, 'ha', 'Área')}
+            ${kpiCard('calendar_month', edad, 'meses', 'Edad al corte')}
+          </div>
+        </div>
+        <div class="kpi-section">
+          <div class="kpi-section-title">Productividad</div>
+          <div class="kpi-grid">
+            ${kpiCard('bar_chart', tch, 't/ha', 'TCH', true)}
+            ${kpiCard('speed', tchm, 't/ha·mes', 'TCHM', true)}
+            ${kpiCard('scale', tcTotal, 't', 'TC Total')}
+            ${kpiCard('event_available', tcMes, 't', 'TC del mes')}
+          </div>
+        </div>
+        <div class="kpi-section">
+          <div class="kpi-section-title">Calidad</div>
+          <div class="kpi-grid">
+            ${kpiCard('water_drop', brix, '%', 'Brix')}
+            ${kpiCard('science', sacarosa, '%', 'Sacarosa')}
+            ${kpiCard('verified', pureza, '%', 'Pureza')}
+            ${kpiCard('trending_up', rendimient, '%', 'Rendimiento')}
+          </div>
+        </div>
+        <div class="kpi-section">
+          <div class="kpi-section-title">Producción de azúcar</div>
+          <div class="kpi-grid">
+            ${kpiCard('inventory_2', tonAz, 't', 'Toneladas azúcar', true)}
+            ${kpiCard('agriculture', tah, 't/ha', 'TAH (azúcar/ha)')}
+            ${kpiCard('query_stats', tahm, 't/ha·mes', 'TAHM', true)}
+          </div>
+        </div>
+      `;
+    }
+
+    // Simple per-row detail list for Maestro: one field per row (label + value),
+    // no KPI cards. Keeps a slim identity header with the suerte code. Shows
+    // every column in the same order as the table; dates are formatted and
+    // empty/error cells fall back to "—".
+    function renderModalListMaestro(row, content) {
+      content.className = 'detail-list-modal';
+
+      const headers = STATE.headers;
+      const findIdx = (norm) => headers.findIndex(h => normalizeHeader(h) === norm);
+      const getFirst = (...norms) => {
+        for (const n of norms) {
+          const i = findIdx(n);
+          if (i !== -1) return sanitizeCell(row[i]).text;
+        }
+        return '—';
+      };
+
+      // Slim identity header
+      const suerte = getFirst('SUERTE');
+      const finca  = getFirst('FINCA');
+      const zona   = getFirst('ZONA');
+
+      // Ubicación: ícono junto al código de la suerte que abre Rio Map en su punto.
+      // Solo ícono, pero con aria-label/title y área táctil de 44px (se usa en campo).
+      const CC = coordCols();
+      const coord = CC.coord !== -1 ? parseCoord(row[CC.coord]) : null;
+      const empresa = CC.empresa !== -1 ? row[CC.empresa] : '';
+      const ubicacionHtml = coord
+        ? `<a class="riomap-icon" href="${escapeHtml(rioMapUrl(coord, empresa, suerte))}" target="_blank" rel="noopener"`
+          + ` title="Ver en Rio Map" aria-label="Ver suerte ${escapeHtml(suerte)} en Rio Map">`
+          + `<span class="material-symbols-outlined" aria-hidden="true">location_on</span></a>`
+        : `<span class="riomap-icon riomap-icon-off" role="img" title="Sin coordenada" aria-label="Sin coordenada">`
+          + `<span class="material-symbols-outlined" aria-hidden="true">location_off</span></span>`;
+
+      // One row per column: label + value
+      let rowsHtml = '';
+      headers.forEach((header, i) => {
+        const sanitized = sanitizeCell(row[i]);
+        const valueText = sanitized.isEmpty
+          ? sanitized.text
+          : (isDateHeader(header) ? formatDateDisplay(sanitized.text) : sanitized.text);
+        const emptyCls = sanitized.isEmpty ? ' cell-empty' : '';
+        rowsHtml += `<div class="detail-row">`
+          + `<span class="detail-label">${escapeHtml(header)}</span>`
+          + `<span class="detail-value${emptyCls}">${escapeHtml(valueText)}</span>`
+          + `</div>`;
+      });
+
+      content.innerHTML = `
+        <div class="detail-id">
+          <div class="detail-id-top">
+            <div class="detail-id-suerte">${escapeHtml(suerte)}</div>
+            ${ubicacionHtml}
+          </div>
+          <div class="detail-id-sub">${escapeHtml(finca)} · Zona ${escapeHtml(zona)}</div>
+        </div>
+        <div class="detail-list">${rowsHtml}</div>
+      `;
+    }
+
+    function kpiCard(icon, value, unit, label, accent) {
+      const isEmpty = value === '—' || value === '' || value == null;
+      const accentClass = accent && !isEmpty ? ' accent' : '';
+      const emptyClass = isEmpty ? ' empty' : '';
+      return `<div class="kpi-card${accentClass}${emptyClass}">
+        <span class="kpi-icon material-symbols-outlined">${escapeHtml(icon)}</span>
+        <div class="kpi-value">${escapeHtml(value)}<span class="kpi-unit"> ${escapeHtml(unit)}</span></div>
+        <div class="kpi-label">${escapeHtml(label)}</div>
+      </div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function updateModalNavUI() {
+      const idx = STATE.modalRowIndex;
+      const total = STATE.filteredRows.length;
+      document.getElementById('modalPrev').disabled = idx <= 0;
+      document.getElementById('modalNext').disabled = idx >= total - 1;
+      document.getElementById('modalIndex').textContent = total > 0
+        ? `${idx + 1} / ${total}`
+        : '';
+    }
+
+    function showRowDetails(idx) {
+      if (idx < 0 || idx >= STATE.filteredRows.length) return;
+      STATE.modalRowIndex = idx;
+      renderModalContent(STATE.filteredRows[idx]);
+      updateModalNavUI();
+      document.getElementById('detailModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function navigateModal(delta) {
+      const next = STATE.modalRowIndex + delta;
+      if (next < 0 || next >= STATE.filteredRows.length) return;
+      STATE.modalRowIndex = next;
+      renderModalContent(STATE.filteredRows[next]);
+      updateModalNavUI();
+      // Reset scroll position inside the modal body on each navigation
+      const body = document.querySelector('#detailModal .overflow-y-auto');
+      if (body) body.scrollTop = 0;
+    }
+
+    function closeModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      STATE.modalRowIndex = -1;
+    }
+
+    // =======================
+    // COMPARTIR / DESCARGAR DETALLE
+    // =======================
+    // La ficha se dibuja a mano en un <canvas> (sin html2canvas: nada de
+    // dependencias nuevas, y así funciona offline). Siempre en tema claro,
+    // porque la imagen se ve fuera de la app (WhatsApp, correo, impresa).
+    const EMPRESA_NOMBRE = { RIOP: 'Riopaila Agrícola', CAST: 'Castilla Agrícola', CAUC: 'Castilla Agrícola' };
+
+    // Datos de la ficha abierta: identidad, campos en el orden de la tabla y enlace a Rio Map.
+    function detailExportData(row) {
+      const headers = STATE.headers;
+      const findIdx = (norm) => headers.findIndex(h => normalizeHeader(h) === norm);
+      const get = (...norms) => {
+        for (const n of norms) {
+          const i = findIdx(n);
+          if (i !== -1) return sanitizeCell(row[i]).text;
+        }
+        return '—';
+      };
+
+      const fields = headers.map((header, i) => {
+        const s = sanitizeCell(row[i]);
+        return {
+          label: header,
+          value: s.isEmpty ? s.text : (isDateHeader(header) ? formatDateDisplay(s.text) : s.text)
+        };
+      });
+
+      const CC = coordCols();
+      const empresa = CC.empresa !== -1 ? String(row[CC.empresa] || '').trim() : '';
+      let id, sub, fileBase, link = '';
+      if (STATE.key === 'zqm') {
+        const ubicIdx = headers.findIndex(h => normalizeHeader(h).startsWith('UBIC'));
+        id = ubicIdx !== -1 ? sanitizeCell(row[ubicIdx]).text : '—';
+        const ano = get('AÑO', 'ANO', 'AÃO'), mes = get('MES');
+        sub = `${get('SECTOR')} · Mes ${mes} · ${ano} · Corte ${get('CORTE')}`;
+        fileBase = `corte-${id}-${ano}-${mes}`;
+      } else {
+        id = get('SUERTE');
+        sub = `${get('FINCA')} · Zona ${get('ZONA')}`;
+        fileBase = `suerte-${id}`;
+        const coord = CC.coord !== -1 ? parseCoord(row[CC.coord]) : null;
+        if (coord) link = rioMapUrl(coord, empresa, id);
+      }
+
+      return {
+        title: STATE.modalTitle || 'Detalle',
+        empresa: EMPRESA_NOMBRE[empresa] || 'Riopaila · Castilla',
+        id, sub, fields, link,
+        fileName: fileBase.replace(/[^\w.-]+/g, '_') + '.png'
+      };
+    }
+
+    // Parte un texto en líneas que caben en maxW (por palabras; corta palabras muy largas).
+    function wrapCanvasText(ctx, text, maxW) {
+      const lines = [];
+      let line = '';
+      for (const word of String(text).split(/\s+/)) {
+        let w = word;
+        while (ctx.measureText(w).width > maxW && w.length > 1) {
+          let n = w.length - 1;
+          while (n > 1 && ctx.measureText(w.slice(0, n)).width > maxW) n--;
+          if (line) { lines.push(line); line = ''; }
+          lines.push(w.slice(0, n));
+          w = w.slice(n);
+        }
+        const probe = line ? `${line} ${w}` : w;
+        if (ctx.measureText(probe).width <= maxW) line = probe;
+        else { if (line) lines.push(line); line = w; }
+      }
+      if (line || !lines.length) lines.push(line);
+      return lines;
+    }
+
+    async function renderDetailPng(data) {
+      const S = 2;                 // escala: 540 px lógicos → 1080 px reales, nítido en el teléfono
+      const W = 540, PAD = 24;
+      const FONT = "Manrope, system-ui, sans-serif";
+      const C = {
+        band: '#0f766e', bandText: '#ffffff', bandMuted: '#ccfbf1',
+        text: '#0f172a', muted: '#64748b', zebra: '#f1f5f9', line: '#e2e8f0', bg: '#ffffff'
+      };
+      try { await document.fonts.load(`700 16px Manrope`); } catch (_) { /* usa la fuente del sistema */ }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const labelW = 200, valueX = PAD + labelW + 12, valueW = W - valueX - PAD;
+      const LINE_H = 19, ROW_PAD = 8;
+
+      // Primera pasada: medir el alto de cada campo.
+      ctx.font = `600 11px ${FONT}`;
+      const measured = data.fields.map(f => {
+        ctx.font = `600 11px ${FONT}`;
+        const labelLines = wrapCanvasText(ctx, f.label.toUpperCase(), labelW);
+        ctx.font = `700 14px ${FONT}`;
+        const valueLines = wrapCanvasText(ctx, f.value, valueW);
+        const h = Math.max(labelLines.length, valueLines.length) * LINE_H + ROW_PAD * 2;
+        return { ...f, labelLines, valueLines, h };
+      });
+
+      const BAND_H = 64, ID_H = 78, FOOT_H = 48;
+      const H = BAND_H + ID_H + measured.reduce((a, f) => a + f.h, 0) + FOOT_H;
+      canvas.width = W * S;
+      canvas.height = H * S;
+      ctx.scale(S, S);
+      ctx.textBaseline = 'middle';
+
+      ctx.fillStyle = C.bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Banda superior
+      ctx.fillStyle = C.band;
+      ctx.fillRect(0, 0, W, BAND_H);
+      ctx.fillStyle = C.bandMuted;
+      ctx.font = `700 11px ${FONT}`;
+      ctx.fillText(`MAESTRO DE SUERTES · ${data.empresa.toUpperCase()}`, PAD, 22);
+      ctx.fillStyle = C.bandText;
+      ctx.font = `800 18px ${FONT}`;
+      ctx.fillText(data.title, PAD, 44);
+
+      // Identidad
+      let y = BAND_H;
+      ctx.fillStyle = C.text;
+      ctx.font = `800 28px ${FONT}`;
+      ctx.fillText(data.id, PAD, y + 30);
+      ctx.fillStyle = C.muted;
+      ctx.font = `500 13px ${FONT}`;
+      ctx.fillText(data.sub, PAD, y + 56);
+      y += ID_H;
+      ctx.fillStyle = C.line;
+      ctx.fillRect(PAD, y - 1, W - PAD * 2, 1);
+
+      // Campos
+      measured.forEach((f, i) => {
+        if (i % 2 === 0) {
+          ctx.fillStyle = C.zebra;
+          ctx.fillRect(PAD - 8, y, W - (PAD - 8) * 2, f.h);
+        }
+        const top = y + ROW_PAD + LINE_H / 2;
+        ctx.fillStyle = C.muted;
+        ctx.font = `600 11px ${FONT}`;
+        f.labelLines.forEach((l, k) => ctx.fillText(l, PAD, top + k * LINE_H));
+        ctx.fillStyle = f.value === '—' ? C.muted : C.text;
+        ctx.font = `700 14px ${FONT}`;
+        f.valueLines.forEach((l, k) => ctx.fillText(l, valueX, top + k * LINE_H));
+        y += f.h;
+      });
+
+      // Pie
+      ctx.fillStyle = C.line;
+      ctx.fillRect(PAD, y, W - PAD * 2, 1);
+      ctx.fillStyle = C.muted;
+      ctx.font = `500 11px ${FONT}`;
+      const generado = new Date().toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' });
+      // El enlace a Rio Map no va en la imagen (no se puede tocar); va en el texto al compartir.
+      ctx.fillText(`Datos al ${CONFIG.dataUpdated} · Generado ${generado} · ${CONFIG.version}`, PAD, y + 24);
+
+      return new Promise((resolve, reject) =>
+        canvas.toBlob(b => b ? resolve(b) : reject(new Error('No se pudo generar la imagen')), 'image/png'));
+    }
+
+    function downloadBlob(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Deshabilita los botones mientras se genera la imagen (evita dobles toques).
+    async function withDetailButtons(fn) {
+      const btns = ['modalShare', 'modalDownload'].map(id => document.getElementById(id));
+      btns.forEach(b => { if (b) b.disabled = true; });
+      try { await fn(); }
+      finally { btns.forEach(b => { if (b) b.disabled = false; }); }
+    }
+
+    function currentDetailRow() {
+      const idx = STATE.modalRowIndex;
+      return idx >= 0 ? STATE.filteredRows[idx] : null;
+    }
+
+    function downloadDetail() {
+      const row = currentDetailRow();
+      if (!row) return;
+      return withDetailButtons(async () => {
+        const data = detailExportData(row);
+        try {
+          downloadBlob(await renderDetailPng(data), data.fileName);
+        } catch (err) {
+          alert('No se pudo descargar la ficha: ' + err.message);
+        }
+      });
+    }
+
+    // Comparte la imagen con la hoja nativa del teléfono (WhatsApp, correo…).
+    // Si el navegador no comparte archivos, comparte el texto; si tampoco, descarga.
+    function shareDetail() {
+      const row = currentDetailRow();
+      if (!row) return;
+      return withDetailButtons(async () => {
+        const data = detailExportData(row);
+        const text = [`${data.title}: ${data.id}`, data.sub, data.link && `Ver en Rio Map: ${data.link}`]
+          .filter(Boolean).join('\n');
+        try {
+          const blob = await renderDetailPng(data);
+          const file = new File([blob], data.fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: `${data.title} ${data.id}`, text });
+          } else if (navigator.share) {
+            const fullText = text + '\n\n' + data.fields.map(f => `${f.label}: ${f.value}`).join('\n');
+            await navigator.share({ title: `${data.title} ${data.id}`, text: fullText });
+          } else {
+            downloadBlob(blob, data.fileName);
+          }
+        } catch (err) {
+          if (err && err.name === 'AbortError') return; // el usuario cerró la hoja de compartir
+          alert('No se pudo compartir la ficha: ' + err.message);
+        }
+      });
+    }
+
+    // Unified global keyboard handler.
+    // Priority: detail modal (open) > filter drawer (open) > search clear.
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('detailModal');
+      const modalOpen = modal && !modal.classList.contains('hidden');
+
+      if (modalOpen) {
+        if (e.key === 'Escape') { e.preventDefault(); closeModal(); return; }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); navigateModal(-1); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateModal(+1); return; }
+        return;
+      }
+
+      if (isFilterDrawerOpen()) {
+        if (e.key === 'Escape') { e.preventDefault(); closeFilterDrawer(); return; }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        // First, close any open filter popover (toolbar or column header).
+        const openPop = document.querySelector('.filter-multi-popover:not(.hidden)');
+        if (openPop) { e.preventDefault(); closeAllMultiPopovers(); return; }
+        const input = document.getElementById('searchInput');
+        if (input.value) {
+          input.value = '';
+          applyFiltersAndSort();
+        }
+        input.blur();
+      }
+    });
+
+    // =======================
+    // THEME MANAGEMENT
+    // =======================
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      // Check saved or system preference
+      if (savedTheme === 'light') {
+        document.documentElement.classList.add('light');
+        updateThemeIcon('light');
+      } else {
+        document.documentElement.classList.remove('light');
+        updateThemeIcon('dark');
+      }
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      html.classList.toggle('light');
+
+      const isLight = html.classList.contains('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      updateThemeIcon(isLight ? 'light' : 'dark');
+    }
+
+    function updateThemeIcon(mode) {
+      const icon = document.getElementById('themeIcon');
+      if (mode === 'light') {
+        icon.textContent = 'dark_mode'; // Icon to switch to dark
+        icon.classList.replace('text-slate-400', 'text-slate-600');
+      } else {
+        icon.textContent = 'light_mode'; // Icon to switch to light
+        icon.classList.replace('text-slate-600', 'text-slate-400');
+      }
+    }
+
+    // Start
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      initApp();
+    });
+
+  </script>
+</body>
+
+</html>

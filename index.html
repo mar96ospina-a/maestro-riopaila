@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <title>Riopaila Agrícola</title>
+  <!-- Todo desde el propio origen: esta app se abre en lote, sin señal. Nada de CDN.
+       Ver "Nada de recursos externos" en CLAUDE.md antes de agregar un <script src="http...">. -->
+  <script src="vendor/tailwind.js"></script>
+  <link href="vendor/fonts.css" rel="stylesheet">
+  <style>
+    :root {
+      --font-manrope: 'Manrope', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-manrope);
+    }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* --- 2026 Liquid Glass & Aurora --- */
+    .blob {
+      position: absolute;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.6;
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      animation: fluidMove 15s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform, border-radius;
+    }
+
+    .blob-1 {
+      top: -15%;
+      left: -15%;
+      width: 60vw;
+      height: 60vh;
+      background: radial-gradient(circle, #0f766e 0%, transparent 60%);
+      animation-delay: 0s;
+    }
+
+    .blob-2 {
+      bottom: -15%;
+      right: -15%;
+      width: 60vw;
+      height: 60vh;
+      background: radial-gradient(circle, #0ea5e9 0%, transparent 60%);
+      animation-delay: -5s;
+    }
+
+    .blob-3 {
+      top: 40%;
+      left: 40%;
+      width: 45vw;
+      height: 45vh;
+      background: radial-gradient(circle, #6366f1 0%, transparent 60%);
+      animation-delay: -10s;
+    }
+
+    @keyframes fluidMove {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+        border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      }
+
+      33% {
+        transform: translate(30px, -50px) scale(1.1) rotate(5deg);
+        border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%;
+      }
+
+      66% {
+        transform: translate(-20px, 20px) scale(0.9) rotate(-5deg);
+        border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%;
+      }
+
+      100% {
+        transform: translate(10px, -10px) scale(1) rotate(0deg);
+        border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+      }
+    }
+
+    /* --- Neoskeuomorphic Glass --- */
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.60);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      /* Inner light + heavy shadow */
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-button {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      box-shadow:
+        4px 4px 10px rgba(0, 0, 0, 0.2),
+        -4px -4px 10px rgba(255, 255, 255, 0.02),
+        inset 1px 1px 1px rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .glass-button:active {
+      transform: scale(0.98);
+      box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .glass-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    /* --- Animations --- */
+    .animate-float-in {
+      animation: floatIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .animate-delay-100 {
+      animation-delay: 100ms;
+    }
+
+    .animate-delay-200 {
+      animation-delay: 200ms;
+    }
+
+    .animate-delay-300 {
+      animation-delay: 300ms;
+    }
+
+    @keyframes floatIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- Custom Scrollbar for Install Toast --- */
+    .install-toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      z-index: 50;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      background: rgba(10, 15, 30, 0.85);
+      /* Darker glass */
+    }
+
+    .install-toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* --- Temporada: Halloween (24 de octubre – 2 de noviembre) -----------------
+       Solo cambian los tres blobs del fondo y el acento del título: calabaza y
+       violeta en vez de teal y azul, con la misma luminosidad para no alterar el
+       contraste del texto encima. La píldora de estado conserva su verde, ámbar
+       y rojo: son colores de significado, no de decoración.
+       Se enciende y se apaga sola; ver aplicarTemporada(). */
+    :root.temporada-halloween .blob-1 {
+      background: radial-gradient(circle, #c2410c 0%, transparent 60%);
+    }
+
+    :root.temporada-halloween .blob-2 {
+      background: radial-gradient(circle, #6d28d9 0%, transparent 60%);
+    }
+
+    :root.temporada-halloween .blob-3 {
+      background: radial-gradient(circle, #b45309 0%, transparent 60%);
+    }
+
+    /* Ámbar sólido en vez del degradado: en temporada el acento pesa por color,
+       no por efecto. */
+    :root.temporada-halloween #tituloSuertes {
+      background-image: none;
+      color: #fbbf24;
+      -webkit-text-fill-color: #fbbf24;
+    }
+
+    .calabaza {
+      display: none;
+      flex-shrink: 0;
+      color: #f59e0b;
+    }
+
+    :root.temporada-halloween .calabaza {
+      display: block;
+    }
+  </style>
+
+  <!-- AI Context: WebMCP / Schema.org -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Riopaila Agrícola - Maestro Offline",
+      "description": "Herramienta offline para consulta de suertes agrícolas, gestión de datos de campo y sincronización.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0"
+      },
+      "potentialAction": {
+        "@type": "ViewAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://riopaila-maestro.app/maestro.html",
+          "actionPlatform": ["http://schema.org/DesktopWebPlatform", "http://schema.org/MobileWebPlatform"]
+        },
+        "name": "Abrir Maestro de Suertes"
+      }
+    }
+  </script>
+  <script>
+    // Temporada de Halloween: del 24 de octubre al 2 de noviembre, cualquier año.
+    // Va en el <head> para que la clase exista antes del primer pintado.
+    (function aplicarTemporada() {
+      const hoy = new Date(), mes = hoy.getMonth() + 1, dia = hoy.getDate();
+      if ((mes === 10 && dia >= 24) || (mes === 11 && dia <= 2)) {
+        document.documentElement.classList.add('temporada-halloween');
+      }
+    })();
+  </script>
+</head>
+
+<body
+  class="bg-slate-950 text-slate-100 h-[100dvh] w-full overflow-hidden flex flex-col items-center justify-center relative selection:bg-teal-500/30 selection:text-teal-200">
+
+  <!-- Dynamic Background -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="blob blob-1 mix-blend-screen"></div>
+    <div class="blob blob-2 mix-blend-screen"></div>
+    <div class="blob blob-3 mix-blend-screen"></div>
+    <!-- Grain/Noise Texture Overlay could go here for extra premium feel -->
+    <div class="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px]"></div>
+  </div>
+
+  <!-- Status Pill (Top) -->
+  <div id="installStatus"
+    class="absolute top-8 animate-float-in glass-panel px-4 py-2 rounded-full flex items-center gap-3 transition-all duration-300">
+    <div class="relative flex h-2.5 w-2.5">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+    </div>
+    <span id="statusIcon" class="hidden material-symbols-outlined text-[16px]">sync</span>
+    <span id="statusText" class="text-xs font-semibold tracking-wide text-slate-300 uppercase">Iniciando...</span>
+  </div>
+
+  <!-- Main Content Card -->
+  <main class="w-full max-w-sm px-6 relative z-10 flex flex-col items-center">
+
+    <!-- Typography -->
+    <div class="text-center mb-12 animate-float-in animate-delay-200">
+      <h1 class="text-3xl font-bold text-white mb-2 tracking-tight flex items-center justify-center gap-2">
+        <span>Maestro de <span id="tituloSuertes"
+            class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">Suertes</span></span>
+        <svg class="calabaza" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 8.4c4.3 0 7.8 2.6 7.8 5.9s-3.5 5.9-7.8 5.9-7.8-2.6-7.8-5.9S7.7 8.4 12 8.4Z" />
+          <path d="M9.3 9c-.8 1.4-1.3 3.2-1.3 5.3s.5 3.9 1.3 5.3" />
+          <path d="M14.7 9c.8 1.4 1.3 3.2 1.3 5.3s-.5 3.9-1.3 5.3" />
+          <path d="M12 8.4V6.3c0-1 .8-1.8 1.8-1.8" />
+        </svg>
+      </h1>
+      <p class="text-slate-400 font-medium text-base">Transformación Digital</p>
+    </div>
+
+    <!-- Primary Action: elegir empresa -->
+    <p class="animate-float-in animate-delay-300 text-slate-400 text-sm font-semibold uppercase tracking-wide mb-4 text-center w-full">
+      Selecciona tu empresa
+    </p>
+
+    <div class="animate-float-in animate-delay-300 w-full flex flex-col gap-4">
+      <!-- Riopaila → solo suertes RIOP -->
+      <button onclick="window.location.href='maestro.html?empresa=RIOP'" data-ai-action="open-riopaila"
+        class="group relative w-full h-20 glass-button rounded-2xl overflow-hidden flex items-center px-4 gap-4">
+        <span
+          class="w-14 h-14 flex items-center justify-center bg-slate-800 rounded-xl shrink-0 shadow-md ring-1 ring-white/10">
+          <img src="logo-riopaila.png" alt="Logo Riopaila Agrícola" class="w-11 h-11 object-contain">
+        </span>
+        <span class="flex flex-col items-start mr-auto">
+          <span class="text-white font-bold text-lg leading-tight">Riopaila</span>
+          <span class="text-slate-400 text-xs">Agrícola S.A.</span>
+        </span>
+        <span
+          class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </button>
+
+      <!-- Castilla → suertes CAST + CAUC -->
+      <button onclick="window.location.href='maestro.html?empresa=CAST,CAUC'" data-ai-action="open-castilla"
+        class="group relative w-full h-20 glass-button rounded-2xl overflow-hidden flex items-center px-4 gap-4">
+        <span
+          class="w-14 h-14 flex items-center justify-center bg-slate-800 rounded-xl shrink-0 shadow-md ring-1 ring-white/10">
+          <img src="logo-castilla.png" alt="Logo Castilla Agrícola" class="w-11 h-11 object-contain">
+        </span>
+        <span class="flex flex-col items-start mr-auto">
+          <span class="text-white font-bold text-lg leading-tight">Castilla</span>
+          <span class="text-slate-400 text-xs">Agrícola</span>
+        </span>
+        <span
+          class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+      </button>
+    </div>
+
+    <!-- Secondary Actions -->
+    <div class="animate-float-in animate-delay-300 mt-6 grid grid-cols-2 gap-4 w-full">
+      <button onclick="verifyInstallation()" data-ai-action="verify-install"
+        class="glass-button h-12 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-white text-sm font-medium">
+        <span class="material-symbols-outlined text-[18px]">verified_user</span>
+        <span>Verificar</span>
+      </button>
+
+      <button onclick="clearCache()" data-ai-action="reset-app"
+        class="glass-button h-12 rounded-xl flex items-center justify-center gap-2 text-slate-300 hover:text-red-400 text-sm font-medium hover:border-red-500/30">
+        <span class="material-symbols-outlined text-[18px]">delete</span>
+        <span>Limpiar</span>
+      </button>
+    </div>
+
+    <!-- App Version -->
+    <div class="mt-12 text-slate-600 font-mono text-xs animate-float-in animate-delay-300">
+      v2.5.2 • 2026 Edition
+    </div>
+
+  </main>
+
+  <!-- Install Toast (Native Style) -->
+  <div id="installToast"
+    class="install-toast glass-panel p-4 pr-2 rounded-2xl flex items-center gap-4 min-w-[320px] shadow-2xl border-slate-700/50">
+    <div class="bg-teal-500/20 p-2 rounded-xl">
+      <span class="material-symbols-outlined text-teal-400">download</span>
+    </div>
+    <div class="flex flex-col mr-auto">
+      <span class="text-sm font-bold text-white leading-tight">Instalar App</span>
+      <span class="text-xs text-slate-400">Acceso rápido y sin conexión</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <button onclick="dismissInstall()" class="p-2 hover:bg-white/5 rounded-lg text-slate-400 transition-colors">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+      <button onclick="installApp()"
+        class="px-4 py-2 bg-slate-100 hover:bg-white text-slate-900 text-xs font-bold rounded-lg transition-colors ml-1">
+        Instalar
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ==============================
+    // 🔧 CONFIGURACIÓN
+    // ==============================
+    // Version constant. MUST match service-worker.js (CACHE_VERSION),
+    // maestro.html (CONFIG.version, #appVersion span) and the "v..." text at the bottom.
+    const APP_VERSION = 'v2.5.2';
+    const CACHE_NAME = `riopaila-maestro-${APP_VERSION}`;
+    let deferredPrompt = null;
+
+    // ==============================
+    // 🔧 Registro del Service Worker
+    // ==============================
+    async function registerServiceWorker() {
+      if (!('serviceWorker' in navigator)) {
+        updateStatus('warning', 'Navegador no compatible');
+        return;
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.register('service-worker.js');
+
+        if (registration.installing) {
+          // Guardar el worker: al pasar a 'activated' registration.installing ya es null.
+          const sw = registration.installing;
+          sw.addEventListener('statechange', () => {
+            if (sw.state === 'activated') verifyCacheStatus();
+          });
+        } else {
+          verifyCacheStatus();
+        }
+
+        // Silent auto-update (matches maestro.html policy): when a new SW is installed
+        // alongside an active one, skip waiting and reload once it takes control.
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+
+      } catch (err) {
+        console.error('[SW] Error:', err);
+        updateStatus('error', 'Error de instalación');
+      }
+    }
+
+    // Reload once the new worker takes control, so the fresh assets are served.
+    if ('serviceWorker' in navigator) {
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!reloading) {
+          reloading = true;
+          window.location.reload();
+        }
+      });
+    }
+
+    // ==============================
+    // 📱 VERIFICACIÓN DE CACHÉ
+    // ==============================
+    async function verifyCacheStatus() {
+      try {
+        await navigator.serviceWorker.ready;
+        const cache = await caches.open(CACHE_NAME);
+        const keys = await cache.keys();
+
+        if (keys.length > 3) {
+          updateStatus('success', 'Listo para usar offline');
+        } else {
+          updateStatus('sync', 'Descargando recursos...');
+          // Forzar un pequeño delay para que se vea la animación si es muy rápido
+          setTimeout(() => {
+            if (keys.length < 3) updateStatus('warning', 'Instalación pendiente');
+            else updateStatus('success', 'Listo para usar offline');
+          }, 2000);
+        }
+      } catch (err) {
+        updateStatus('error', 'Error de caché');
+      }
+    }
+
+    // ==============================
+    // 📊 UI UPDATES
+    // ==============================
+    function updateStatus(type, message) {
+      const icon = document.getElementById('statusIcon');
+      const text = document.getElementById('statusText');
+      const div = document.getElementById('installStatus');
+      const ping = div.querySelector('.animate-ping'); // Find the ping animation to hide/show/color
+
+      text.textContent = message;
+
+      // Default State
+      div.className = 'absolute top-8 animate-float-in glass-panel px-4 py-2 rounded-full flex items-center gap-3 transition-all duration-300 border border-transparent';
+      icon.className = 'hidden material-symbols-outlined text-[16px]';
+      if (ping) ping.className = 'animate-ping absolute inline-flex h-full w-full rounded-full opacity-75';
+
+      switch (type) {
+        case 'success':
+          // Green/Teal
+          div.classList.add('border-teal-500/30', 'bg-teal-500/5');
+          text.classList.add('text-teal-400');
+          if (ping) ping.classList.add('bg-teal-400');
+          div.querySelector('.relative.inline-flex').classList.add('bg-teal-500');
+          break;
+        case 'warning':
+          // Amber/Yellow
+          div.classList.add('border-amber-500/30', 'bg-amber-500/5');
+          text.classList.remove('text-slate-300');
+          text.classList.add('text-amber-400');
+          if (ping) ping.classList.add('bg-amber-400');
+          div.querySelector('.relative.inline-flex').classList.remove('bg-teal-500');
+          div.querySelector('.relative.inline-flex').classList.add('bg-amber-500');
+          break;
+        case 'error':
+          // Red
+          div.classList.add('border-red-500/30', 'bg-red-500/5');
+          text.classList.remove('text-slate-300');
+          text.classList.add('text-red-400');
+          if (ping) ping.classList.add('bg-red-400');
+          div.querySelector('.relative.inline-flex').classList.remove('bg-teal-500');
+          div.querySelector('.relative.inline-flex').classList.add('bg-red-500');
+          break;
+        default: // sync
+          // Blue/Slate (Default)
+          text.classList.add('text-slate-300');
+          if (ping) ping.classList.add('bg-sky-400');
+          div.querySelector('.relative.inline-flex').classList.remove('bg-teal-500');
+          div.querySelector('.relative.inline-flex').classList.add('bg-sky-500');
+      }
+    }
+
+    // ==============================
+    // 📱 PWA INSTALL
+    // ==============================
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installToast').classList.add('show');
+    });
+
+    function dismissInstall() {
+      document.getElementById('installToast').classList.remove('show');
+    }
+
+    async function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          updateStatus('success', 'App instalada');
+        }
+        deferredPrompt = null;
+        dismissInstall();
+      }
+    }
+
+    // ==============================
+    // 🧹 UTILS
+    // ==============================
+    async function clearCache() {
+      if (!confirm('¿Seguro que deseas borrar los datos y reiniciar?')) return;
+
+      try {
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) await registration.unregister();
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        }
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+      } catch (err) {
+        alert('Error al limpiar');
+      }
+    }
+
+    function verifyInstallation() {
+      updateStatus('sync', 'Verificando...');
+      verifyCacheStatus();
+    }
+
+    // INIT
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!navigator.onLine) updateStatus('warning', 'Modo Offline');
+      registerServiceWorker();
+    });
+
+    window.addEventListener('online', () => {
+      updateStatus('success', 'Conexión restaurada');
+      verifyCacheStatus();
+    });
+
+    window.addEventListener('offline', () => updateStatus('warning', 'Modo Offline'));
+  </script>
+</body>
+
+</html>

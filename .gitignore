@@ -1,0 +1,14 @@
+# Grafo de conocimiento generado localmente (skill graphify)
+graphify-out/
+
+# Configuración local de Claude Code
+.claude/
+
+# Restos de camaro-agro: proyecto aparte, borrado del repo en 4604fe9.
+# Lo que queda en disco es node_modules/ y .vite/ sin rastrear.
+camaro-agro/
+
+# Nombres viejos de los logos, previos al rename a logo-riopaila.png /
+# logo-castilla.png. Contenido idéntico (mismo hash) al de los versionados.
+LOGO-RIO-POS.png
+Logo Castilla.png

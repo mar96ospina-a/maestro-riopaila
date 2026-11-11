@@ -1,0 +1,24 @@
+{
+  "name": "Riopaila Agrícola – Maestro de Suertes",
+  "short_name": "Maestro Riopaila",
+  "description": "Consulta interactiva del Maestro de Suertes de Riopaila Agrícola. Actualización dinámica y acceso offline.",
+  "lang": "es-CO",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7fafc",
+  "theme_color": "#0ea5a4",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
