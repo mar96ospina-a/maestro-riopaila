@@ -1444,7 +1444,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.3</span>
+            <span id="appVersion">v2.5.4</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1800,13 +1800,17 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.3',
+      version: 'v2.5.4',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
       // maestro.csv nuevo. Se pinta en el encabezado (ver #dataUpdated).
       dataUpdated: '11 de noviembre de 2026',
-      dataUpdatedShort: '11 nov 2026'
+      dataUpdatedShort: '11 nov 2026',
+      // Rio Map (riomap.vercel.app) quedó caído tras la salida de su autor; el
+      // enlace "Ubicación/ver en mapa" se oculta para no mandar al campo a un
+      // error 503. Pon rioMapEnabled: true cuando Rio Map se recupere o se monte uno nuevo.
+      rioMapEnabled: false
     };
 
     // =======================
@@ -2557,7 +2561,7 @@
           // Columna COORDENADAS: enlace 📍 a Rio Map (no texto crudo). Si no hay
           // coordenada, cae al render genérico (celda vacía). El clic no abre el
           // detalle de la fila (stopPropagation).
-          if (index === CC.coord && CC.coord !== -1) {
+          if (CONFIG.rioMapEnabled && index === CC.coord && CC.coord !== -1) {
             const coord = parseCoord(cell);
             if (coord) {
               const a = document.createElement('a');
@@ -3719,7 +3723,7 @@
       const CC = coordCols();
       const coord = CC.coord !== -1 ? parseCoord(row[CC.coord]) : null;
       const empresa = CC.empresa !== -1 ? row[CC.empresa] : '';
-      const ubicacionHtml = coord
+      const ubicacionHtml = !CONFIG.rioMapEnabled ? '' : coord
         ? `<a class="riomap-icon" href="${escapeHtml(rioMapUrl(coord, empresa, suerte))}" target="_blank" rel="noopener"`
           + ` title="Ver en Rio Map" aria-label="Ver suerte ${escapeHtml(suerte)} en Rio Map">`
           + `<span class="material-symbols-outlined" aria-hidden="true">location_on</span></a>`
@@ -3847,7 +3851,7 @@
         sub = `${get('FINCA')} · Zona ${get('ZONA')}`;
         fileBase = `suerte-${id}`;
         const coord = CC.coord !== -1 ? parseCoord(row[CC.coord]) : null;
-        if (coord) link = rioMapUrl(coord, empresa, id);
+        if (CONFIG.rioMapEnabled && coord) link = rioMapUrl(coord, empresa, id);
       }
 
       return {
