@@ -1444,7 +1444,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.4</span>
+            <span id="appVersion">v2.5.5</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1800,7 +1800,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.4',
+      version: 'v2.5.5',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -2120,6 +2120,7 @@
         const response = await fetch(STATE.csvFile);
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const text = await readCsvResponse(response);
+        if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad
         processData(text);
         STATE.loaded = true;
       } catch (error) {
@@ -2133,6 +2134,7 @@
         const cache = await caches.match(STATE.csvFile);
         if (cache) {
           const text = await cache.text();
+          if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad (desde caché)
           processData(text);
           STATE.loaded = true;
           // Force logic to show offline banner even if navigator says online (cache mismatch)
@@ -2143,6 +2145,62 @@
       } catch (e) {
         showError('Error Crítico', 'No se pudo acceder al almacenamiento local.');
       }
+    }
+
+    // =======================
+    // ZQM: VARIEDAD CRUZADA DEL MAESTRO
+    // =======================
+    // El zqm.csv (histórico de cortes) NO trae variedad. Se cruza con maestro.csv
+    // por "Ubic Técnica" = "SUERTE" y se inyecta una columna VARIEDAD entre Corte y
+    // Area. OJO: es la variedad ACTUAL de la suerte en el maestro, no la que se
+    // cosechó en el corte de ese año (una renovación la cambia). Para cortes viejos
+    // puede no coincidir con lo molido ese año. El mapa se carga una sola vez.
+    let VARIEDAD_POR_SUERTE = null;  // Map SUERTE(normalizada) -> variedad; Map vacío = no disponible
+    async function ensureVariedadMap() {
+      if (VARIEDAD_POR_SUERTE) return VARIEDAD_POR_SUERTE;
+      const parse = (text) => {
+        const rows = parseCsvText(text, ';');
+        if (rows.length < 2) return null;
+        const H = rows[0].map(h => normalizeHeader(h));
+        const iS = H.indexOf('SUERTE'), iV = H.indexOf('VARIEDAD');
+        if (iS === -1 || iV === -1) return null;
+        const m = new Map();
+        for (let i = 1; i < rows.length; i++) {
+          const k = (rows[i][iS] || '').trim().toUpperCase();
+          const v = (rows[i][iV] || '').trim();
+          if (k && v && !m.has(k)) m.set(k, v);
+        }
+        return m;
+      };
+      try {
+        const r = await fetch('maestro.csv');
+        if (r.ok) { VARIEDAD_POR_SUERTE = parse(await readCsvResponse(r)) || new Map(); return VARIEDAD_POR_SUERTE; }
+      } catch (_) { /* red caída: intenta el caché */ }
+      try {
+        const c = await caches.match('maestro.csv');
+        if (c) { VARIEDAD_POR_SUERTE = parse(await c.text()) || new Map(); return VARIEDAD_POR_SUERTE; }
+      } catch (_) { /* sin caché: ZQM se muestra sin variedad */ }
+      VARIEDAD_POR_SUERTE = new Map();
+      return VARIEDAD_POR_SUERTE;
+    }
+
+    // Inserta la columna VARIEDAD (del maestro) justo después de CORTE en la vista ZQM.
+    // No hace nada si: no es ZQM, no hay maestro cargado, ya existe la columna, o no
+    // se ubican CORTE / UBIC. Muta STATE.headers y cada fila en paralelo para que
+    // sigan alineados (todo el render resuelve columnas por índice).
+    function enrichZqmVariedad() {
+      if (STATE.key !== 'zqm') return;
+      if (!VARIEDAD_POR_SUERTE || !VARIEDAD_POR_SUERTE.size) return;
+      if (STATE.headers.some(h => normalizeHeader(h) === 'VARIEDAD')) return;
+      const corteIdx = STATE.headers.findIndex(h => normalizeHeader(h) === 'CORTE');
+      const ubicIdx  = STATE.headers.findIndex(h => normalizeHeader(h).startsWith('UBIC'));
+      if (corteIdx === -1 || ubicIdx === -1) return;
+      const at = corteIdx + 1;  // entre Corte y Area
+      STATE.headers.splice(at, 0, 'VARIEDAD');
+      STATE.rows.forEach(r => {
+        const k = (r[ubicIdx] || '').trim().toUpperCase();
+        r.splice(at, 0, VARIEDAD_POR_SUERTE.get(k) || '');
+      });
     }
 
     function processData(csvText) {
@@ -2176,6 +2234,9 @@
       } else {
         processRowsGeneric(allRows);
       }
+
+      // ZQM: inyecta la columna VARIEDAD (del maestro) antes de armar la UI.
+      enrichZqmVariedad();
 
       // Init View (shared)
       document.getElementById('loadingMsg').style.display = 'none';
@@ -2792,6 +2853,7 @@
           const text = await readCsvResponse(response);
           // Abort if the user switched away while we were loading.
           if (CURRENT_VIEW_KEY !== targetKey) return;
+          if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad
           processData(text);  // processData calls populateFilters + applyFiltersAndSort
           STATE.loaded = true;
         } catch (err) {
@@ -3624,6 +3686,7 @@
       const corte  = getFirst('CORTE');
 
       // Characteristics
+      const variedad = getFirst('VARIEDAD');
       const area = getFirst('AREA');
       const edad = getFirst('EDAD');
 
@@ -3663,6 +3726,7 @@
         <div class="kpi-section">
           <div class="kpi-section-title">Características</div>
           <div class="kpi-grid">
+            ${kpiCard('spa', variedad, '', 'Variedad')}
             ${kpiCard('square_foot', area, 'ha', 'Área')}
             ${kpiCard('calendar_month', edad, 'meses', 'Edad al corte')}
           </div>

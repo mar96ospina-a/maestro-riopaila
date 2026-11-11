@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.4'; // Oculta enlace a Rio Map (caído); datos al 11 nov 2026 (oficial de P&C)
+const CACHE_VERSION = 'v2.5.5'; // ZQM: columna Variedad (cruzada del maestro) entre Corte y Area
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
