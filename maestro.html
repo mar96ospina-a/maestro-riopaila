@@ -279,6 +279,43 @@
       background: rgba(128, 128, 128, 0.5);
     }
 
+    /* =========================================================
+       Anchos de columna — vista Contratos (#maestro.view-contratos).
+       Las columnas se mapean por posición (nth-child); las ocultas
+       (display:none) siguen contando, así que el mapeo es estable:
+       1 EMPRESA · 2 CONTRATO · 3 PROVEEDOR · 4 NIT · 5 RECURSO(sticky)
+       6 DESCRIPCION · 7 UNIDAD · 8 TARIFA_MIN · 9 TARIFA_MAX
+       10 CANT_EJEC · 11 VAL_EJEC_LINEA · 12 INICIO · 13 FIN
+       ========================================================= */
+    #maestro.view-contratos td { vertical-align: top; }
+    /* CONTRATO */
+    #maestro.view-contratos th:nth-child(2),
+    #maestro.view-contratos td:nth-child(2) { width: 150px; }
+    /* PROVEEDOR: nombres largos → envuelve */
+    #maestro.view-contratos th:nth-child(3),
+    #maestro.view-contratos td:nth-child(3) { white-space: normal; min-width: 150px; max-width: 190px; }
+    /* NIT */
+    #maestro.view-contratos th:nth-child(4),
+    #maestro.view-contratos td:nth-child(4) { width: 100px; }
+    /* RECURSO (sticky) */
+    #maestro.view-contratos th:nth-child(5),
+    #maestro.view-contratos td:nth-child(5) { width: 110px; }
+    /* DESCRIPCION: lo más largo → envuelve, ancho acotado */
+    #maestro.view-contratos th:nth-child(6),
+    #maestro.view-contratos td:nth-child(6) { white-space: normal; min-width: 210px; max-width: 300px; }
+    /* UNIDAD */
+    #maestro.view-contratos th:nth-child(7),
+    #maestro.view-contratos td:nth-child(7) { width: 72px; text-align: center; }
+    /* TARIFA MÍN / MÁX / CANT / VALOR: compactas y numéricas */
+    #maestro.view-contratos th:nth-child(8),
+    #maestro.view-contratos td:nth-child(8),
+    #maestro.view-contratos th:nth-child(9),
+    #maestro.view-contratos td:nth-child(9) { width: 108px; }
+    #maestro.view-contratos th:nth-child(10),
+    #maestro.view-contratos td:nth-child(10) { width: 118px; }
+    #maestro.view-contratos th:nth-child(11),
+    #maestro.view-contratos td:nth-child(11) { width: 128px; }
+
     /* Sticky identifier columns. STATE.stickyCols (array) drives which columns
        are pinned. renderTable adds .sticky-col + .sticky-col-N (with N = index)
        and .sticky-col-last on the rightmost pinned column. JS measures column
@@ -1444,7 +1481,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.12</span>
+            <span id="appVersion">v2.5.13</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1807,7 +1844,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.12',
+      version: 'v2.5.13',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -2618,6 +2655,9 @@
     function renderTable() {
       const tbody = document.querySelector('#maestro tbody');
       const thead = document.querySelector('#maestro thead');
+
+      // Marca la tabla para el CSS de anchos específico de Contratos.
+      document.getElementById('maestro').classList.toggle('view-contratos', CURRENT_VIEW_KEY === 'contratos');
 
       // Per-view set of sticky column indices, sorted ascending.
       const stickies = (STATE.stickyCols || []).slice().sort((a, b) => a - b);
