@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.9'; // Contratos: encabezados legibles (Tarifa Mín/Máx, Cantidad Ejecutada, Valor Ejecutado...)
+const CACHE_VERSION = 'v2.5.10'; // Contratos: oculta columna EMPRESA (y su filtro) cuando se entra acotado por empresa
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
