@@ -1444,7 +1444,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.8</span>
+            <span id="appVersion">v2.5.9</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1807,7 +1807,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.8',
+      version: 'v2.5.9',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -1969,6 +1969,13 @@
         modalTitle: 'Detalle de la línea',
         // Formato visual de columnas numéricas (ver formatCellDisplay).
         colFormat: { 'TARIFA_MIN': 'money', 'TARIFA_MAX': 'money', 'VAL_EJEC_LINEA': 'money', 'CANT_EJEC': 'number' },
+        // Encabezados legibles (ver headerLabel). El CSV mantiene los nombres internos.
+        headerLabels: {
+          'EMPRESA': 'Empresa', 'CONTRATO': 'Contrato', 'PROVEEDOR': 'Proveedor', 'NIT': 'NIT',
+          'RECURSO': 'Recurso', 'DESCRIPCION': 'Descripción', 'UNIDAD': 'Unidad',
+          'TARIFA_MIN': 'Tarifa Mín', 'TARIFA_MAX': 'Tarifa Máx', 'CANT_EJEC': 'Cantidad Ejecutada',
+          'VAL_EJEC_LINEA': 'Valor Ejecutado', 'INICIO': 'Inicio', 'FIN': 'Fin'
+        },
         filterConfig: [
           { key: 'empresa',   selectId: 'filterZona',     label: 'Todas las empresas',    match: h => normalizeHeader(h) === 'EMPRESA',   index: -1 },
           { key: 'proveedor', selectId: 'filterFinca',    label: 'Todos los proveedores', match: h => normalizeHeader(h) === 'PROVEEDOR', index: -1 },
@@ -2050,6 +2057,15 @@
       if (cfg === 'money')  return '$' + n.toLocaleString('es-CO', { maximumFractionDigits: 0 });
       if (cfg === 'number') return n.toLocaleString('es-CO', { maximumFractionDigits: 2 });
       return null;
+    }
+
+    // Etiqueta legible para un encabezado (STATE.headerLabels: HEADER_NORMALIZADO→texto).
+    // Solo cambia lo que se muestra (thead y modal); STATE.headers, filtros, orden,
+    // colFormat y export siguen usando el nombre interno del CSV.
+    function headerLabel(h) {
+      const m = STATE.headerLabels;
+      if (m) { const k = normalizeHeader(h); if (m[k]) return m[k]; }
+      return h;
     }
 
     // Read a CSV response as text. response.text() always assumes UTF-8, but Excel
@@ -2607,7 +2623,7 @@
           }
 
           const label = document.createElement('span');
-          label.textContent = h;
+          label.textContent = headerLabel(h);
           const indicator = document.createElement('span');
           indicator.className = 'sort-indicator material-symbols-outlined';
           indicator.textContent = 'unfold_more';
@@ -2623,7 +2639,7 @@
           funnel.className = 'col-filter-btn material-symbols-outlined';
           funnel.dataset.col = index;
           funnel.textContent = 'filter_alt';
-          funnel.setAttribute('aria-label', `Filtrar ${h}`);
+          funnel.setAttribute('aria-label', `Filtrar ${headerLabel(h)}`);
           funnel.addEventListener('click', (e) => {
             e.stopPropagation();
             const pop = document.getElementById('headerFilterPopover');
@@ -3698,7 +3714,7 @@
         const dt = document.createElement('dt');
         dt.className = "text-xs font-bold uppercase tracking-wide mb-1";
         dt.style.color = "var(--table-header-text)";
-        dt.textContent = header;
+        dt.textContent = headerLabel(header);
 
         const dd = document.createElement('dd');
         dd.className = "mt-1 text-sm break-words font-medium";
