@@ -200,29 +200,34 @@
       display: block;
     }
 
-    /* --- Despliegue de empresas bajo el botón "Maestro" (grid-rows 0fr→1fr) --- */
-    #empresas {
+    /* --- Despliegue de sub-opciones bajo "Maestro" y "Contratos" (grid-rows 0fr→1fr) --- */
+    #empresas,
+    #contratosEmp {
       display: grid;
       grid-template-rows: 0fr;
       opacity: 0;
       transition: grid-template-rows .35s cubic-bezier(.2, .8, .2, 1), opacity .3s, margin .35s;
     }
 
-    #empresas.open {
+    #empresas.open,
+    #contratosEmp.open {
       grid-template-rows: 1fr;
       opacity: 1;
       margin-top: .25rem;
     }
 
-    #empresas > div {
+    #empresas > div,
+    #contratosEmp > div {
       overflow: hidden;
     }
 
-    #btnMaestro .chev {
+    #btnMaestro .chev,
+    #btnContratos .chev {
       transition: transform .3s cubic-bezier(.2, .8, .2, 1);
     }
 
-    #btnMaestro.open .chev {
+    #btnMaestro.open .chev,
+    #btnContratos.open .chev {
       transform: rotate(90deg);
     }
   </style>
@@ -362,8 +367,9 @@
         </div>
       </div>
 
-      <!-- Contratos (contenido por definir) -->
-      <button onclick="abrirContratos()" data-ai-action="open-contratos"
+      <!-- Contratos → despliega las 4 empresas (snapshot de contratos CMA activos) -->
+      <button id="btnContratos" onclick="toggleContratos()" data-ai-action="open-contratos"
+        aria-expanded="false" aria-controls="contratosEmp"
         class="group relative w-full h-20 glass-button rounded-2xl overflow-hidden flex items-center px-4 gap-4">
         <span
           class="w-14 h-14 flex items-center justify-center bg-sky-500/15 rounded-xl shrink-0 ring-1 ring-sky-400/20 text-sky-300">
@@ -376,11 +382,40 @@
         </span>
         <span class="flex flex-col items-start mr-auto">
           <span class="text-white font-bold text-lg leading-tight">Contratos</span>
-          <span class="text-slate-400 text-xs">Por definir</span>
+          <span class="text-slate-400 text-xs">Recursos y tarifas por empresa</span>
         </span>
-        <span
-          class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+        <span class="chev material-symbols-outlined text-white/40">chevron_right</span>
       </button>
+
+      <!-- Empresas de contratos (se despliegan al dar clic en Contratos) -->
+      <div id="contratosEmp">
+        <div class="flex flex-col gap-3 pl-3 border-l border-white/10">
+          <button onclick="window.location.href='maestro.html?view=contratos&cemp=Riopaila'" data-ai-action="contratos-riopaila"
+            class="group relative w-full h-14 glass-button rounded-xl overflow-hidden flex items-center px-3 gap-3">
+            <span class="w-9 h-9 flex items-center justify-center bg-sky-500/15 rounded-lg shrink-0 ring-1 ring-sky-400/20 text-sky-300 font-bold text-sm">R</span>
+            <span class="text-white font-semibold text-base mr-auto">Riopaila</span>
+            <span class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+          <button onclick="window.location.href='maestro.html?view=contratos&cemp=Castilla'" data-ai-action="contratos-castilla"
+            class="group relative w-full h-14 glass-button rounded-xl overflow-hidden flex items-center px-3 gap-3">
+            <span class="w-9 h-9 flex items-center justify-center bg-sky-500/15 rounded-lg shrink-0 ring-1 ring-sky-400/20 text-sky-300 font-bold text-sm">C</span>
+            <span class="text-white font-semibold text-base mr-auto">Castilla</span>
+            <span class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+          <button onclick="window.location.href='maestro.html?view=contratos&cemp=Bengala'" data-ai-action="contratos-bengala"
+            class="group relative w-full h-14 glass-button rounded-xl overflow-hidden flex items-center px-3 gap-3">
+            <span class="w-9 h-9 flex items-center justify-center bg-sky-500/15 rounded-lg shrink-0 ring-1 ring-sky-400/20 text-sky-300 font-bold text-sm">B</span>
+            <span class="text-white font-semibold text-base mr-auto">Bengala</span>
+            <span class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+          <button onclick="window.location.href='maestro.html?view=contratos&cemp=Cauca%20Grande'" data-ai-action="contratos-caucagrande"
+            class="group relative w-full h-14 glass-button rounded-xl overflow-hidden flex items-center px-3 gap-3">
+            <span class="w-9 h-9 flex items-center justify-center bg-sky-500/15 rounded-lg shrink-0 ring-1 ring-sky-400/20 text-sky-300 font-bold text-sm">CG</span>
+            <span class="text-white font-semibold text-base mr-auto">Cauca Grande</span>
+            <span class="material-symbols-outlined text-white/40 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Secondary Actions -->
@@ -400,7 +435,7 @@
 
     <!-- App Version -->
     <div class="mt-12 text-slate-600 font-mono text-xs animate-float-in animate-delay-300">
-      v2.5.6 • 2026 Edition
+      v2.5.7 • 2026 Edition
     </div>
 
   </main>
@@ -432,7 +467,7 @@
     // ==============================
     // Version constant. MUST match service-worker.js (CACHE_VERSION),
     // maestro.html (CONFIG.version, #appVersion span) and the "v..." text at the bottom.
-    const APP_VERSION = 'v2.5.6';
+    const APP_VERSION = 'v2.5.7';
     const CACHE_NAME = `riopaila-maestro-${APP_VERSION}`;
     let deferredPrompt = null;
 
@@ -628,11 +663,32 @@
       const abierto = emp.classList.toggle('open');
       btn.classList.toggle('open', abierto);
       btn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+      // Al abrir uno, cierra el otro para no apilar dos listas largas.
+      if (abierto) cerrarContratos();
     }
 
-    // Contratos: contenido por definir. Deja el gancho listo para cuando se defina.
-    function abrirContratos() {
-      alert('Contratos — en construcción.');
+    // Contratos despliega las 4 empresas; cada una abre maestro.html?view=contratos&cemp=...
+    function toggleContratos() {
+      const btn = document.getElementById('btnContratos');
+      const emp = document.getElementById('contratosEmp');
+      const abierto = emp.classList.toggle('open');
+      btn.classList.toggle('open', abierto);
+      btn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+      if (abierto) cerrarMaestro();
+    }
+
+    function cerrarMaestro() {
+      const btn = document.getElementById('btnMaestro');
+      const emp = document.getElementById('empresas');
+      if (emp) emp.classList.remove('open');
+      if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+    }
+
+    function cerrarContratos() {
+      const btn = document.getElementById('btnContratos');
+      const emp = document.getElementById('contratosEmp');
+      if (emp) emp.classList.remove('open');
+      if (btn) { btn.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
     }
 
     // INIT

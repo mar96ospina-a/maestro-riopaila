@@ -1444,7 +1444,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.6</span>
+            <span id="appVersion">v2.5.7</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1716,6 +1716,13 @@
       <span class="material-symbols-outlined">analytics</span>
       <span>ZQM</span>
     </button>
+    <button type="button" class="nav-item" data-view="contratos"
+      aria-current="false" onclick="switchView('contratos')">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor" aria-hidden="true" style="display:block">
+        <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H14a1 1 0 0 1-1-1V3.5zM8 13h8v1.5H8V13zm0 3.5h6V18H8v-1.5zM8 9.5h3V11H8V9.5z"/>
+      </svg>
+      <span>Contratos</span>
+    </button>
   </nav>
 
   <!-- Detail Modal -->
@@ -1800,7 +1807,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.6',
+      version: 'v2.5.7',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -1944,10 +1951,36 @@
           corte: { label: 'Corte', allLabel: 'Todos', match: h => normalizeHeader(h) === 'CORTE' },
           edad:  { label: 'Edad',  allLabel: 'Todas', match: h => normalizeHeader(h) === 'EDAD' }
         }
+      }),
+      // Contratos: líneas de recurso/tarifa de los contratos CMA activos de Simple Agri.
+      // Es un SNAPSHOT (la app no entra a Simple Agri): contratos.csv se re-extrae a mano.
+      // Cada registro = una línea (recurso) de un contrato. Se puede acotar a una de las
+      // 4 empresas con ?cemp=Riopaila|Castilla|Bengala|Cauca Grande (ver CONTRATO_SCOPE).
+      contratos: Object.assign(makeViewState(), {
+        key: 'contratos',
+        csvFile: 'contratos.csv',
+        appTitleHtml: 'Contra<span class="text-teal-400">tos</span>',
+        captionBase: 'Contratos — Recursos y Tarifas',
+        searchPlaceholder: 'Buscar por recurso, descripción, proveedor, contrato...',
+        exportPrefix: 'contratos',
+        stickyCols: [4],       // RECURSO
+        processor: 'generic',
+        modalRenderer: 'list', // tarjeta por campo (renderModalDefault)
+        modalTitle: 'Detalle de la línea',
+        filterConfig: [
+          { key: 'empresa',   selectId: 'filterZona',     label: 'Todas las empresas',    match: h => normalizeHeader(h) === 'EMPRESA',   index: -1 },
+          { key: 'proveedor', selectId: 'filterFinca',    label: 'Todos los proveedores', match: h => normalizeHeader(h) === 'PROVEEDOR', index: -1 },
+          { key: 'contrato',  selectId: 'filterVariedad', label: 'Todos los contratos',   match: h => normalizeHeader(h) === 'CONTRATO',  index: -1 },
+          { key: 'unidad',    selectId: 'filterUso',      label: 'Todas las unidades',    match: h => normalizeHeader(h) === 'UNIDAD',    index: -1 }
+        ],
+        multiConfig: {}        // sin filtros multi (corte/edad)
       })
     };
 
-    let CURRENT_VIEW_KEY = 'maestro';
+    let CURRENT_VIEW_KEY = (function () {
+      const v = new URLSearchParams(window.location.search).get('view');
+      return (v && VIEWS[v]) ? v : 'maestro';
+    })();
     let STATE = VIEWS[CURRENT_VIEW_KEY];
 
     // =======================
@@ -1969,6 +2002,15 @@
       if (set.has('RIOP')) label = 'Riopaila';
       else if (set.has('CAST') || set.has('CAUC')) label = 'Castilla';
       return { active: true, set, label };
+    })();
+
+    // Vista Contratos: se acota a una de las 4 empresas con
+    // ?cemp=Riopaila|Castilla|Bengala|Cauca Grande (desde el home). Sin el
+    // parámetro, la vista muestra las 4 (con el filtro Empresa disponible).
+    const CONTRATO_SCOPE = (function () {
+      const raw = new URLSearchParams(window.location.search).get('cemp');
+      const name = raw ? decodeURIComponent(raw).trim() : '';
+      return { active: !!name, name };
     })();
 
     // Google Sheets / Excel error sentinels that sometimes leak into CSV exports
@@ -2783,11 +2825,13 @@
     // is shown instead.
     function updateCompanyUi() {
       const isMaestro = CURRENT_VIEW_KEY === 'maestro';
+      const isContratos = CURRENT_VIEW_KEY === 'contratos';
       const chip = document.getElementById('companyChip');
       const noBanner = document.getElementById('noCompanyBanner');
       const nameEl = document.getElementById('companyChipName');
-      if (nameEl) nameEl.textContent = COMPANY.label || '—';
-      if (chip) chip.classList.toggle('hidden', !(isMaestro && COMPANY.active));
+      const showChip = (isMaestro && COMPANY.active) || (isContratos && CONTRATO_SCOPE.active);
+      if (nameEl) nameEl.textContent = isContratos ? (CONTRATO_SCOPE.name || '—') : (COMPANY.label || '—');
+      if (chip) chip.classList.toggle('hidden', !showChip);
       if (noBanner) noBanner.classList.toggle('hidden', !(isMaestro && !COMPANY.active));
     }
 
@@ -2948,6 +2992,13 @@
         if (STATE.empresaColumnIndex !== -1) {
           return STATE.rows.filter(r =>
             COMPANY.set.has((r[STATE.empresaColumnIndex] || '').trim().toUpperCase()));
+        }
+      }
+      if (CURRENT_VIEW_KEY === 'contratos' && CONTRATO_SCOPE.active) {
+        const idx = STATE.headers.findIndex(h => normalizeHeader(h) === 'EMPRESA');
+        if (idx !== -1) {
+          const want = CONTRATO_SCOPE.name.toUpperCase();
+          return STATE.rows.filter(r => (r[idx] || '').trim().toUpperCase() === want);
         }
       }
       return STATE.rows;

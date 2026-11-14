@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.6'; // Home: título Operaciones Campo + botón Maestro (despliega empresas) y Contratos
+const CACHE_VERSION = 'v2.5.7'; // Vista Contratos (snapshot CMA activos, 4 empresas) + contratos.csv
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
@@ -14,6 +14,7 @@ const CRITICAL_URLS = [
   BASE + 'maestro.html',
   BASE + 'maestro.csv',
   BASE + 'zqm.csv',
+  BASE + 'contratos.csv',
   BASE + 'manifest.json',
   BASE + 'service-worker.js',
   BASE + 'icon-192.png',
