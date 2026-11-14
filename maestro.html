@@ -1495,7 +1495,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.20</span>
+            <span id="appVersion">v2.5.21</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1862,7 +1862,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.20',
+      version: 'v2.5.21',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -3013,8 +3013,17 @@
       const input = document.getElementById('searchInput');
       if (input) input.placeholder = STATE.searchPlaceholder;
 
-      // Bottom nav active state
+      // Bottom nav: contextual por "mundo". Suertes (Maestro + ZQM) y Contratos son
+      // módulos separados —Contratos ya tiene su entrada en el home—, así que la barra
+      // solo muestra los módulos del mundo actual: en Maestro/ZQM no aparece Contratos,
+      // y en Contratos no aparecen Maestro/ZQM. Al home se vuelve con el logo.
+      const NAV_WORLD = { maestro: 'suertes', zqm: 'suertes', contratos: 'contratos' };
+      const curWorld = NAV_WORLD[CURRENT_VIEW_KEY] || 'suertes';
       document.querySelectorAll('#bottomNav .nav-item').forEach(btn => {
+        const inWorld = (NAV_WORLD[btn.dataset.view] || 'suertes') === curWorld;
+        // style.display directo: el selector #bottomNav .nav-item gana a la clase .hidden
+        // por especificidad, así que ocultar con clase no surte efecto aquí.
+        btn.style.display = inWorld ? '' : 'none';
         const active = btn.dataset.view === CURRENT_VIEW_KEY;
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-current', active ? 'page' : 'false');
