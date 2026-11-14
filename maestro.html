@@ -1444,7 +1444,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.11</span>
+            <span id="appVersion">v2.5.12</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1807,7 +1807,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.11',
+      version: 'v2.5.12',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -1969,6 +1969,8 @@
         modalTitle: 'Detalle de la línea',
         // Formato visual de columnas numéricas (ver formatCellDisplay).
         colFormat: { 'TARIFA_MIN': 'money', 'TARIFA_MAX': 'money', 'VAL_EJEC_LINEA': 'money', 'CANT_EJEC': 'number' },
+        // Inicio/Fin se ocultan en la tabla (siguen en el modal de detalle).
+        tableOnlyHiddenCols: ['INICIO', 'FIN'],
         // Encabezados legibles (ver headerLabel). El CSV mantiene los nombres internos.
         headerLabels: {
           'EMPRESA': 'Empresa', 'CONTRATO': 'Contrato', 'PROVEEDOR': 'Proveedor', 'NIT': 'NIT',
@@ -2068,14 +2070,26 @@
       return h;
     }
 
-    // Índices de columnas a ocultar en la vista actual. Contratos acotado a una
-    // empresa oculta EMPRESA (redundante). Devuelve un Set (vacío si no aplica).
-    function getHiddenColIndexes() {
+    // Columnas ocultas en TABLA, MODAL y FILTROS: Contratos acotado a una empresa
+    // oculta EMPRESA (redundante). Devuelve un Set de índices (vacío si no aplica).
+    function getScopedHiddenCols() {
       const hidden = new Set();
       if (CURRENT_VIEW_KEY === 'contratos' && CONTRATO_SCOPE.active) {
         const ei = STATE.headers.findIndex(h => normalizeHeader(h) === 'EMPRESA');
         if (ei !== -1) hidden.add(ei);
       }
+      return hidden;
+    }
+
+    // Columnas ocultas SOLO en la tabla (siguen visibles en el modal de detalle).
+    // STATE.tableOnlyHiddenCols lista nombres de encabezado (p.ej. INICIO/FIN en
+    // Contratos). Incluye además las ocultas por scope.
+    function getTableHiddenCols() {
+      const hidden = getScopedHiddenCols();
+      (STATE.tableOnlyHiddenCols || []).forEach(name => {
+        const i = STATE.headers.findIndex(h => normalizeHeader(h) === normalizeHeader(name));
+        if (i !== -1) hidden.add(i);
+      });
       return hidden;
     }
 
@@ -2609,10 +2623,10 @@
       const stickies = (STATE.stickyCols || []).slice().sort((a, b) => a - b);
       const lastSticky = stickies.length ? stickies[stickies.length - 1] : -1;
 
-      // Columnas ocultas: en Contratos acotado a una empresa, la columna EMPRESA
-      // sobra (ya se sabe cuál es) y se oculta para ganar ancho. Se oculta con
-      // display:none por índice (no afecta búsqueda, orden ni export).
-      const hiddenCols = getHiddenColIndexes();
+      // Columnas ocultas en la tabla: EMPRESA (si hay scope) + las tableOnlyHiddenCols
+      // de la vista (Inicio/Fin en Contratos, que siguen en el modal). display:none
+      // por índice (no afecta búsqueda, orden ni export).
+      const hiddenCols = getTableHiddenCols();
 
       // Render Headers: rebuild when empty (first time or after view switch).
       if (thead.rows.length === 0) {
@@ -3098,7 +3112,7 @@
 
       // En Contratos acotado a una empresa, el filtro "Todas las empresas" sobra
       // (solo tendría un valor): se oculta su select.
-      const hidden = getHiddenColIndexes();
+      const hidden = getScopedHiddenCols();
       STATE.filterConfig.forEach(col => {
         if (col.index !== -1 && hidden.has(col.index)) {
           const s = document.getElementById(col.selectId);
@@ -3733,7 +3747,7 @@
 
     // Default: every header → labeled card. Used by Maestro.
     function renderModalDefault(row, content) {
-      const hidden = getHiddenColIndexes();
+      const hidden = getScopedHiddenCols();  // el modal mantiene Inicio/Fin; solo oculta EMPRESA con scope
       STATE.headers.forEach((header, i) => {
         if (hidden.has(i)) return;  // columnas ocultas (p.ej. EMPRESA en Contratos acotado)
         const sanitized = sanitizeCell(row[i]);
