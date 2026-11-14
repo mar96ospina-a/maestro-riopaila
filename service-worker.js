@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.15'; // Contratos: panel de cupo con pesos exactos al filtrar 1 contrato
+const CACHE_VERSION = 'v2.5.16'; // App renombrado a "Operaciones Campo" (identidad PWA/manifest/titulos)
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
