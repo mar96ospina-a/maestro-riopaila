@@ -1480,7 +1480,7 @@
       <div class="flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
         <div
           class="relative w-8 h-8 rounded-full bg-gradient-to-tr from-teal-500/20 to-emerald-500/20 flex items-center justify-center border border-white/10">
-          <img src="icon-192.png" alt="Logo" class="w-6 h-6 object-contain">
+          <img id="appLogo" src="icon-192.png" alt="Logo" class="w-6 h-6 object-contain">
         </div>
         <div class="flex flex-col">
           <div class="flex items-center gap-1.5">
@@ -1495,7 +1495,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.18</span>
+            <span id="appVersion">v2.5.19</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1862,7 +1862,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.18',
+      version: 'v2.5.19',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -3059,6 +3059,19 @@
       if (nameEl) nameEl.textContent = isContratos ? (CONTRATO_SCOPE.name || '—') : (COMPANY.label || '—');
       if (chip) chip.classList.toggle('hidden', !showChip);
       if (noBanner) noBanner.classList.toggle('hidden', !(isMaestro && !COMPANY.active));
+
+      // Logo del encabezado segun la empresa abierta: cada empresa muestra el suyo.
+      // Cauca Grande (sin logo propio), ZQM y "todas las empresas" usan el icono
+      // combinado (los 3 emblemas). Riopaila/Castilla aplica tanto en Maestro como
+      // en Contratos; Bengala solo existe en Contratos.
+      const logoEl = document.getElementById('appLogo');
+      if (logoEl) {
+        const emp = (isContratos && CONTRATO_SCOPE.active) ? CONTRATO_SCOPE.name
+                  : (isMaestro && COMPANY.active) ? COMPANY.label : '';
+        const LOGO = { 'Riopaila': 'logo-riopaila.png', 'Castilla': 'logo-castilla.png', 'Bengala': 'logo-bengala.png' };
+        const want = LOGO[emp] || 'icon-192.png';
+        if (!logoEl.getAttribute('src').endsWith(want)) logoEl.setAttribute('src', want);
+      }
     }
 
     // Persists current UI inputs into the active view's state before switching out.

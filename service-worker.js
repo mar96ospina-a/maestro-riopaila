@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.18'; // Icono de la app: 3 emblemas (Riopaila/Castilla/Bengala) en piramide
+const CACHE_VERSION = 'v2.5.19'; // Logo del encabezado por empresa (Riopaila/Castilla/Bengala); + logo-bengala.png
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
@@ -22,6 +22,7 @@ const CRITICAL_URLS = [
   BASE + 'icon-512.png',
   BASE + 'logo-castilla.png',
   BASE + 'logo-riopaila.png',
+  BASE + 'logo-bengala.png',
   // Tailwind y las fuentes. Antes venían de CDN y el SW ni las veía (son de otro
   // origen), así que offline la app se quedaba sin CSS: sin Tailwind la clase
   // .hidden deja de existir y se destapan a la vez spinner, error, banner y modales.
