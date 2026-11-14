@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.19'; // Logo del encabezado por empresa (Riopaila/Castilla/Bengala); + logo-bengala.png
+const CACHE_VERSION = 'v2.5.20'; // Nombre del app: "Agricolas - Operaciones Campo" (antes decia Riopaila)
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia

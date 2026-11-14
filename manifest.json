@@ -1,7 +1,7 @@
 {
-  "name": "Riopaila – Operaciones Campo",
+  "name": "Agrícolas – Operaciones Campo",
   "short_name": "Operaciones Campo",
-  "description": "Operaciones de Campo de Riopaila Agrícola: suertes (Maestro), ZQM y contratos. Consulta dinámica y acceso offline.",
+  "description": "Operaciones de Campo de las empresas agrícolas (Riopaila, Castilla, Bengala, Cauca Grande): suertes (Maestro), ZQM y contratos. Consulta dinámica y acceso offline.",
   "lang": "es-CO",
   "start_url": "./index.html",
   "display": "standalone",
