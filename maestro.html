@@ -32,6 +32,7 @@
       --header-bg: rgba(15, 23, 42, 0.85);
       --input-bg: rgba(15, 23, 42, 0.5);
       --input-text: #ffffff;
+      --select-popup-bg: #0f172a;
       --table-header-bg: rgba(15, 23, 42, 0.95);
       --table-header-text: #2dd4bf;
       /* teal-400 */
@@ -71,6 +72,7 @@
       --header-bg: rgba(255, 255, 255, 0.92);
       --input-bg: #ffffff;
       --input-text: #0f172a;
+      --select-popup-bg: #ffffff;
 
       --table-header-bg: #f8fafc;
       --table-header-text: #0d9488;
@@ -474,6 +476,18 @@
     .filter-select[data-active="true"] {
       border-color: var(--success-text);
       color: var(--success-text);
+    }
+
+    /* Panel de opciones del select nativo: fondo sólido del tema (sin el gris del
+       navegador, que salía al componer el --input-bg translúcido sobre blanco). */
+    .filter-select option {
+      background-color: var(--select-popup-bg);
+      color: var(--input-text);
+    }
+    .filter-select option:checked {
+      background: var(--table-header-bg);
+      color: var(--success-text);
+      font-weight: 600;
     }
 
     /* Multi-select filter: button trigger + checkbox popover */
@@ -1481,7 +1495,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.16</span>
+            <span id="appVersion">v2.5.17</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1848,7 +1862,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.16',
+      version: 'v2.5.17',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
