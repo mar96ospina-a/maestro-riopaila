@@ -1481,7 +1481,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.13</span>
+            <span id="appVersion">v2.5.14</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1676,6 +1676,10 @@
 
     <!-- Content Area -->
 
+    <!-- Panel de cupo (solo vista Contratos). Lo llena updateCupoPanel() con el
+         cupo/ejecutado de los contratos presentes en el filtro actual. -->
+    <div id="cupoPanel" class="hidden mb-3 shrink-0"></div>
+
     <!-- Loading State -->
     <div id="loadingMsg" class="flex flex-col items-center justify-center py-20 text-slate-400">
       <div class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin mb-4"></div>
@@ -1844,7 +1848,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.13',
+      version: 'v2.5.14',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -2256,6 +2260,7 @@
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const text = await readCsvResponse(response);
         if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad
+        if (STATE.key === 'contratos') await ensureCuposMap();  // cupo por contrato
         processData(text);
         STATE.loaded = true;
       } catch (error) {
@@ -2270,6 +2275,7 @@
         if (cache) {
           const text = await cache.text();
           if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad (desde caché)
+          if (STATE.key === 'contratos') await ensureCuposMap();  // cupo por contrato (desde caché)
           processData(text);
           STATE.loaded = true;
           // Force logic to show offline banner even if navigator says online (cache mismatch)
@@ -2317,6 +2323,94 @@
       } catch (_) { /* sin caché: ZQM se muestra sin variedad */ }
       VARIEDAD_POR_SUERTE = new Map();
       return VARIEDAD_POR_SUERTE;
+    }
+
+    // =======================
+    // CONTRATOS: CUPO POR CONTRATO (snapshot)
+    // =======================
+    // contratos_cupos.csv trae, por contrato CMA activo, el cupo (valor contratado)
+    // y lo ejecutado total. El panel cruza por CONTRATO con las filas visibles y
+    // agrega por contrato DISTINTO (no por línea). Es snapshot: se re-extrae a mano
+    // junto con contratos.csv.
+    let CUPOS_POR_CONTRATO = null; // Map CONTRATO -> {cupo, ejec}
+    async function ensureCuposMap() {
+      if (CUPOS_POR_CONTRATO) return CUPOS_POR_CONTRATO;
+      const parse = (text) => {
+        const rows = parseCsvText(text, ';');
+        if (rows.length < 2) return null;
+        const H = rows[0].map(h => normalizeHeader(h));
+        const iC = H.indexOf('CONTRATO'), iCupo = H.indexOf('CUPO'), iEj = H.indexOf('EJECUTADO');
+        if (iC === -1 || iCupo === -1) return null;
+        const m = new Map();
+        for (let i = 1; i < rows.length; i++) {
+          const k = (rows[i][iC] || '').trim();
+          if (!k) continue;
+          m.set(k, { cupo: Number(rows[i][iCupo]) || 0, ejec: Number(rows[i][iEj]) || 0 });
+        }
+        return m;
+      };
+      try {
+        const r = await fetch('contratos_cupos.csv');
+        if (r.ok) { CUPOS_POR_CONTRATO = parse(await readCsvResponse(r)) || new Map(); return CUPOS_POR_CONTRATO; }
+      } catch (_) { /* red caída: intenta caché */ }
+      try {
+        const c = await caches.match('contratos_cupos.csv');
+        if (c) { CUPOS_POR_CONTRATO = parse(await c.text()) || new Map(); return CUPOS_POR_CONTRATO; }
+      } catch (_) { /* sin caché: el panel no se muestra */ }
+      CUPOS_POR_CONTRATO = new Map();
+      return CUPOS_POR_CONTRATO;
+    }
+
+    // Formato COP compacto en millones: 21026091904 -> "$21.026 M".
+    function fmtCOPmillones(n) {
+      return '$' + Math.round((Number(n) || 0) / 1e6).toLocaleString('es-CO') + ' M';
+    }
+
+    // Panel de cupo: agrega el cupo/ejecutado de los contratos DISTINTOS presentes
+    // en el filtro actual y pinta una barra de consumo. Solo en la vista Contratos.
+    function updateCupoPanel() {
+      const panel = document.getElementById('cupoPanel');
+      if (!panel) return;
+      if (CURRENT_VIEW_KEY !== 'contratos' || !CUPOS_POR_CONTRATO || CUPOS_POR_CONTRATO.size === 0) {
+        panel.classList.add('hidden'); panel.innerHTML = ''; return;
+      }
+      const ci = STATE.headers.findIndex(h => normalizeHeader(h) === 'CONTRATO');
+      if (ci === -1) { panel.classList.add('hidden'); return; }
+      const vistos = new Set();
+      let cupo = 0, ejec = 0;
+      for (const r of STATE.filteredRows) {
+        const c = (r[ci] || '').trim();
+        if (!c || vistos.has(c)) continue;
+        vistos.add(c);
+        const v = CUPOS_POR_CONTRATO.get(c);
+        if (v) { cupo += v.cupo; ejec += v.ejec; }
+      }
+      if (cupo <= 0) { panel.classList.add('hidden'); panel.innerHTML = ''; return; }
+      const disp = Math.max(cupo - ejec, 0);
+      const pct = Math.min(Math.round(100 * ejec / cupo), 100);
+      const nC = vistos.size;
+      const alerta = pct >= 90;
+      const barColor = alerta ? '#dc2626' : 'var(--success-text, #1D9E75)';
+      const titulo = CONTRATO_SCOPE.active ? CONTRATO_SCOPE.name : 'Todas las empresas';
+      panel.innerHTML = `
+        <div style="background:var(--input-bg); border:1px solid var(--glass-border); border-radius:14px; padding:.7rem .9rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px;">
+            <span style="font-size:.72rem; color:var(--text-muted); font-weight:600; display:inline-flex; align-items:center; gap:5px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20"/><circle cx="17" cy="14.5" r="1.4"/></svg>
+              Cupo · ${escapeHtml(titulo)} · ${nC} contrato${nC === 1 ? '' : 's'}
+            </span>
+            <span style="font-size:.72rem; color:${alerta ? '#f87171' : 'var(--text-muted)'}; font-weight:700;">${pct}% consumido</span>
+          </div>
+          <div style="height:20px; border-radius:6px; background:var(--table-header-bg); overflow:hidden;">
+            <div style="height:100%; width:${pct}%; background:${barColor}; min-width:2px; transition:width .3s;"></div>
+          </div>
+          <div style="display:flex; gap:1.4rem; margin-top:9px; flex-wrap:wrap;">
+            <span style="font-size:.7rem; color:var(--text-muted);">Cupo <b style="color:var(--text-main); font-size:.92rem; font-weight:700;">${fmtCOPmillones(cupo)}</b></span>
+            <span style="font-size:.7rem; color:var(--text-muted);">Ejecutado <b style="color:var(--success-text); font-size:.92rem; font-weight:700;">${fmtCOPmillones(ejec)}</b></span>
+            <span style="font-size:.7rem; color:var(--text-muted);">Disponible <b style="color:var(--text-main); font-size:.92rem; font-weight:700;">${fmtCOPmillones(disp)}</b></span>
+          </div>
+        </div>`;
+      panel.classList.remove('hidden');
     }
 
     // Inserta la columna VARIEDAD (del maestro) justo después de CORTE en la vista ZQM.
@@ -3009,6 +3103,7 @@
           // Abort if the user switched away while we were loading.
           if (CURRENT_VIEW_KEY !== targetKey) return;
           if (STATE.key === 'zqm') await ensureVariedadMap();  // cruce de variedad
+          if (STATE.key === 'contratos') await ensureCuposMap();  // cupo por contrato
           processData(text);  // processData calls populateFilters + applyFiltersAndSort
           STATE.loaded = true;
         } catch (err) {
@@ -3595,6 +3690,7 @@
       updateFilterBadge();
 
       renderTable();
+      updateCupoPanel();
     }
 
     function clearAllFilters() {
