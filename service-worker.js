@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.5'; // ZQM: columna Variedad (cruzada del maestro) entre Corte y Area
+const CACHE_VERSION = 'v2.5.6'; // Home: título Operaciones Campo + botón Maestro (despliega empresas) y Contratos
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
