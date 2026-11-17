@@ -1495,7 +1495,7 @@
             </svg>
           </div>
           <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono tracking-wide leading-none">
-            <span id="appVersion">v2.5.21</span>
+            <span id="appVersion">v2.5.22</span>
             <span class="text-slate-600" aria-hidden="true">·</span>
             <!-- Texto puesto por applyDataUpdatedLabel() desde CONFIG.dataUpdated -->
             <span id="dataUpdated"></span>
@@ -1862,7 +1862,7 @@
     // NOTE: `version` below MUST match service-worker.js (CACHE_VERSION),
     // index.html (APP_VERSION) and the <span id="appVersion"> text in the header.
     const CONFIG = {
-      version: 'v2.5.21',
+      version: 'v2.5.22',
       csvFile: 'maestro.csv',
       pageSize: 25,
       // Fecha de los datos, no de la app: cámbiala cada vez que se suba un
@@ -2007,7 +2007,7 @@
           edad:  { label: 'Edad',  allLabel: 'Todas', match: h => normalizeHeader(h) === 'EDAD' }
         }
       }),
-      // Contratos: líneas de recurso/tarifa de los contratos CMA activos de Simple Agri.
+      // Contratos: líneas de recurso/tarifa de los contratos activos (CMA y CNE) de Simple Agri.
       // Es un SNAPSHOT (la app no entra a Simple Agri): contratos.csv se re-extrae a mano.
       // Cada registro = una línea (recurso) de un contrato. Se puede acotar a una de las
       // 4 empresas con ?cemp=Riopaila|Castilla|Bengala|Cauca Grande (ver CONTRATO_SCOPE).
@@ -2342,7 +2342,7 @@
     // =======================
     // CONTRATOS: CUPO POR CONTRATO (snapshot)
     // =======================
-    // contratos_cupos.csv trae, por contrato CMA activo, el cupo (valor contratado)
+    // contratos_cupos.csv trae, por contrato activo (CMA/CNE), el cupo (valor contratado)
     // y lo ejecutado total. El panel cruza por CONTRATO con las filas visibles y
     // agrega por contrato DISTINTO (no por línea). Es snapshot: se re-extrae a mano
     // junto con contratos.csv.
