@@ -1,6 +1,6 @@
 // Version constant. MUST match index.html (APP_VERSION, visible "v..." text)
 // and maestro.html (CONFIG.version, #appVersion span). Bump all four on release.
-const CACHE_VERSION = 'v2.5.22'; // +3 contratos CNE activos (ALVECA, Labores Agricolas, Transportes Arbelaez): 106 contratos / 1973 lineas
+const CACHE_VERSION = 'v2.5.23'; // Nuevo modulo Generacion de Ordenes (ordenes.html) + catalogos actividades.csv y recursos.csv
 const CACHE_NAME = `riopaila-maestro-${CACHE_VERSION}`;
 // El sitio se sirve bajo /maestro-riopaila/ en GitHub Pages y bajo / en local, asi
 // que la base se deriva del scope del propio SW. Con '/' fijo, el precache pedia
@@ -12,10 +12,13 @@ const CRITICAL_URLS = [
   BASE,
   BASE + 'index.html',
   BASE + 'maestro.html',
+  BASE + 'ordenes.html',
   BASE + 'maestro.csv',
   BASE + 'zqm.csv',
   BASE + 'contratos.csv',
   BASE + 'contratos_cupos.csv',
+  BASE + 'actividades.csv',
+  BASE + 'recursos.csv',
   BASE + 'manifest.json',
   BASE + 'service-worker.js',
   BASE + 'icon-192.png',

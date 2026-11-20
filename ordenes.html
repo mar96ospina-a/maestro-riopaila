@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="manifest" href="manifest.json">
+  <title>Generación de Órdenes – Operaciones Campo</title>
+  <script src="vendor/tailwind.js"></script>
+  <link href="vendor/fonts.css" rel="stylesheet">
+  <style>
+    :root { --font-manrope: 'Manrope', sans-serif; }
+    body { font-family: var(--font-manrope); }
+
+    .blob { position: fixed; filter: blur(80px); z-index: -1; opacity: 0.5; pointer-events: none;
+      border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+    .blob-1 { top: -20%; left: -15%; width: 55vw; height: 55vh; background: radial-gradient(circle, #0f766e 0%, transparent 60%); }
+    .blob-2 { bottom: -20%; right: -15%; width: 55vw; height: 55vh; background: radial-gradient(circle, #0ea5e9 0%, transparent 60%); }
+    .blob-3 { top: 35%; left: 45%; width: 40vw; height: 40vh; background: radial-gradient(circle, #f59e0b 0%, transparent 60%); }
+
+    .glass {
+      background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.2), inset 1px 1px 1px rgba(255,255,255,0.08);
+    }
+    .fld { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; }
+    .fld:focus { outline: none; border-color: rgba(245,158,11,0.6); background: rgba(255,255,255,0.07); }
+    .fld::placeholder { color: #64748b; }
+    .ro { background: rgba(255,255,255,0.03); color: #94a3b8; }
+    .btn-amber { background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.35); color: #fcd34d; }
+    .btn-amber:hover { background: rgba(245,158,11,0.28); }
+    .btn-amber:active { transform: scale(0.98); }
+    option { background:#0f172a; color:#e2e8f0; }
+    ::-webkit-scrollbar { height: 8px; width: 8px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    table.rows th, table.rows td { white-space: nowrap; }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-[100dvh] w-full relative selection:bg-amber-500/30">
+  <div class="blob blob-1 mix-blend-screen"></div>
+  <div class="blob blob-2 mix-blend-screen"></div>
+  <div class="blob blob-3 mix-blend-screen"></div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-20 backdrop-blur-md bg-slate-950/60 border-b border-white/10">
+    <div class="max-w-5xl mx-auto px-4 h-16 flex items-center gap-3">
+      <a href="index.html" class="glass w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-white shrink-0" aria-label="Volver">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+      <span class="w-10 h-10 flex items-center justify-center bg-amber-500/15 rounded-xl ring-1 ring-amber-400/20 text-amber-300 shrink-0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg>
+      </span>
+      <div class="mr-auto min-w-0">
+        <h1 class="text-white font-bold text-base leading-tight truncate">Generación de Órdenes</h1>
+        <p class="text-slate-400 text-xs leading-tight">Programación anexa · captura digital</p>
+      </div>
+      <span id="loadState" class="text-xs text-slate-500 shrink-0 hidden sm:block">Cargando…</span>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-4 py-5 relative z-10">
+
+    <!-- Encabezado de la orden -->
+    <section class="glass rounded-2xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <label class="flex flex-col gap-1 col-span-2 sm:col-span-1">
+        <span class="text-[11px] uppercase tracking-wide text-slate-400">Semana</span>
+        <input id="hSemana" type="number" class="fld rounded-lg px-3 py-2 text-sm" value="48" min="1" max="53">
+      </label>
+      <label class="flex flex-col gap-1 col-span-2 sm:col-span-3">
+        <span class="text-[11px] uppercase tracking-wide text-slate-400">Técnico agrícola</span>
+        <input id="hTecnico" list="dlTecnicos" class="fld rounded-lg px-3 py-2 text-sm" placeholder="Selecciona o escribe tu nombre">
+        <datalist id="dlTecnicos"></datalist>
+      </label>
+    </section>
+
+    <!-- Fila de captura -->
+    <section class="glass rounded-2xl p-4 mb-4">
+      <h2 class="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nueva línea
+      </h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <!-- Terreno (B) -->
+        <label class="flex flex-col gap-1 col-span-2">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Terreno (suerte) <span class="text-amber-400">*</span></span>
+          <input id="fSuerte" list="dlSuertes" class="fld rounded-lg px-3 py-2 text-sm" placeholder="Ej. 2101-010" autocomplete="off">
+          <datalist id="dlSuertes"></datalist>
+          <span id="chipSuerte" class="text-[11px] text-slate-500"></span>
+        </label>
+        <!-- Área (C) auto -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">Área (Ha)</span>
+          <input id="fArea" readonly tabindex="-1" class="ro rounded-lg px-3 py-2 text-sm" placeholder="—">
+        </label>
+        <!-- Edad (D) auto -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">Edad (meses)</span>
+          <input id="fEdad" readonly tabindex="-1" class="ro rounded-lg px-3 py-2 text-sm" placeholder="—">
+        </label>
+
+        <!-- Actividad (E) -->
+        <label class="flex flex-col gap-1 col-span-2">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Cód. Actividad <span class="text-amber-400">*</span></span>
+          <input id="fActividad" list="dlActividades" class="fld rounded-lg px-3 py-2 text-sm" placeholder="Ej. 582" autocomplete="off">
+          <datalist id="dlActividades"></datalist>
+          <span id="chipActividad" class="text-[11px] text-slate-500"></span>
+        </label>
+        <!-- UM act (G) auto -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">UM Act.</span>
+          <input id="fUmAct" readonly tabindex="-1" class="ro rounded-lg px-3 py-2 text-sm" placeholder="—">
+        </label>
+        <!-- Cant act (H) -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Cant. Act <span class="text-amber-400">*</span></span>
+          <input id="fCantAct" type="number" step="any" class="fld rounded-lg px-3 py-2 text-sm" placeholder="0">
+        </label>
+
+        <!-- Recurso (I) -->
+        <label class="flex flex-col gap-1 col-span-2">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Cód. Recurso/Material <span class="text-amber-400">*</span></span>
+          <input id="fRecurso" list="dlRecursos" class="fld rounded-lg px-3 py-2 text-sm" placeholder="Ej. 12001507" autocomplete="off">
+          <datalist id="dlRecursos"></datalist>
+          <span id="chipRecurso" class="text-[11px] text-slate-500"></span>
+        </label>
+        <!-- UM rec (K) auto -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">UM Rec.</span>
+          <input id="fUmRec" readonly tabindex="-1" class="ro rounded-lg px-3 py-2 text-sm" placeholder="—">
+        </label>
+        <!-- Cant rec (L) -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Cantidad Recurso <span class="text-amber-400">*</span></span>
+          <input id="fCantRec" type="number" step="any" class="fld rounded-lg px-3 py-2 text-sm" placeholder="0">
+        </label>
+
+        <!-- Contratista (M) -->
+        <label class="flex flex-col gap-1 col-span-2">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Contratista</span>
+          <select id="fContratista" class="fld rounded-lg px-3 py-2 text-sm">
+            <option value="">PROPIO</option>
+          </select>
+          <span id="chipContrato" class="text-[11px] text-slate-500"></span>
+        </label>
+        <!-- Costo (Q) auto -->
+        <label class="flex flex-col gap-1 col-span-2">
+          <span class="text-[11px] uppercase tracking-wide text-slate-500">Costo estimado</span>
+          <input id="fCosto" readonly tabindex="-1" class="ro rounded-lg px-3 py-2 text-sm font-semibold text-amber-300" placeholder="—">
+        </label>
+
+        <!-- Observaciones (R) -->
+        <label class="flex flex-col gap-1 col-span-2 sm:col-span-4">
+          <span class="text-[11px] uppercase tracking-wide text-slate-400">Observaciones</span>
+          <input id="fObs" class="fld rounded-lg px-3 py-2 text-sm" placeholder="Opcional">
+        </label>
+      </div>
+
+      <div class="flex items-center gap-3 mt-4">
+        <button id="btnAdd" class="btn-amber rounded-xl h-11 px-5 text-sm font-semibold flex items-center gap-2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Agregar línea
+        </button>
+        <button id="btnClearForm" class="glass rounded-xl h-11 px-4 text-sm text-slate-300 hover:text-white">Limpiar</button>
+        <span id="formMsg" class="text-xs text-rose-300"></span>
+      </div>
+    </section>
+
+    <!-- Tabla de líneas -->
+    <section class="glass rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <h2 class="text-sm font-semibold text-white">Líneas de la programación <span id="rowCount" class="text-slate-400 font-normal"></span></h2>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400">Total:</span>
+          <span id="totalCost" class="text-amber-300 font-bold text-sm">$0</span>
+          <button id="btnExport" class="btn-amber rounded-lg h-9 px-3 text-xs font-semibold flex items-center gap-1.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Exportar CSV
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto -mx-1 px-1">
+        <table class="rows w-full text-xs border-collapse">
+          <thead>
+            <tr class="text-slate-400 border-b border-white/10">
+              <th class="text-left font-medium py-2 pr-3">Terreno</th>
+              <th class="text-right font-medium py-2 pr-3">Área</th>
+              <th class="text-right font-medium py-2 pr-3">Edad</th>
+              <th class="text-left font-medium py-2 pr-3">Actividad</th>
+              <th class="text-right font-medium py-2 pr-3">Cant.Act</th>
+              <th class="text-left font-medium py-2 pr-3">Recurso</th>
+              <th class="text-right font-medium py-2 pr-3">Cant.Rec</th>
+              <th class="text-left font-medium py-2 pr-3">Contratista</th>
+              <th class="text-left font-medium py-2 pr-3">Contrato</th>
+              <th class="text-right font-medium py-2 pr-3">Costo</th>
+              <th class="py-2"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <p id="emptyRows" class="text-center text-slate-500 text-sm py-8">Aún no hay líneas. Agrega la primera arriba.</p>
+    </section>
+  </main>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const LS_KEY = 'ordenes_prog_anexa_v1';
+    const SUERTES = {}, ACTS = {}, RECS = {}, CONTR = {}; // CONTR[recurso] = [{prov,contrato,tarifa}]
+    let ROWS = [];
+
+    const fmt = n => '$' + Math.round(n||0).toLocaleString('es-CO');
+    const num = v => { const x = parseFloat(String(v).replace(',','.')); return isFinite(x)?x:0; };
+    // info de recurso: material (R&M, con precio propio) o servicio (solo contrato)
+    function recInfo(code){
+      code=(code||'').trim();
+      const m=RECS[code], ct=(CONTR[code]||[])[0];
+      if(!m && !ct) return null;
+      return {
+        nombre: m? m.nombre : (ct? ct.descr : ''),
+        um:     m? m.um     : (ct? ct.unidad : ''),
+        propioTarifa: m? m.tarifa : 0,
+        hasPropio: !!m
+      };
+    }
+
+    async function loadCSV(file){
+      const r = await fetch(file + '?v=' + Date.now());
+      if(!r.ok) throw new Error(file+' '+r.status);
+      let t = await r.text();
+      if(t.charCodeAt(0)===0xFEFF) t = t.slice(1);
+      return t.split(/\r?\n/).filter(l=>l.trim()).map(l=>l.split(';'));
+    }
+
+    async function init(){
+      try{
+        const [m,a,rc,co] = await Promise.all([
+          loadCSV('maestro.csv'), loadCSV('actividades.csv'),
+          loadCSV('recursos.csv'), loadCSV('contratos.csv')
+        ]);
+        // maestro: SUERTE0 AREA3 EDAD4 TECNICO18 EMPRESA20
+        const tecs = new Set();
+        m.slice(1).forEach(c=>{
+          if(!c[0]) return;
+          SUERTES[c[0].trim()] = { area:c[3]||'', edad:c[4]||'', tecnico:(c[18]||'').trim(), empresa:(c[20]||'').trim() };
+          if(c[18] && c[18].trim()) tecs.add(c[18].trim());
+        });
+        a.slice(1).forEach(c=>{ if(c[0]) ACTS[c[0].trim()] = { descr:c[1]||'', um:c[2]||'' }; });
+        rc.slice(1).forEach(c=>{ if(c[0]) RECS[c[0].trim()] = { nombre:c[1]||'', tarifa:num(c[2]), um:c[3]||'' }; });
+        // contratos: EMPRESA0 CONTRATO1 PROVEEDOR2 NIT3 RECURSO4 DESCRIPCION5 UNIDAD6 TARIFA_MIN7
+        co.slice(1).forEach(c=>{
+          const rec=(c[4]||'').trim(); if(!rec) return;
+          (CONTR[rec]=CONTR[rec]||[]).push({ prov:(c[2]||'').trim(), contrato:(c[1]||'').trim(), tarifa:num(c[7]), descr:(c[5]||'').trim(), unidad:(c[6]||'').trim() });
+        });
+
+        // recursos = unión R&M (propio) + recursos de contrato (servicios)
+        const recKeys = new Set(Object.keys(RECS));
+        Object.keys(CONTR).forEach(k=>recKeys.add(k));
+        const recLabels = {};
+        [...recKeys].forEach(k=>{ const r=recInfo(k); recLabels[k]={nombre:r.nombre}; });
+
+        fillDatalist('dlSuertes', Object.keys(SUERTES).sort());
+        fillDatalist('dlActividades', Object.keys(ACTS).sort((x,y)=>x-y||x.localeCompare(y)).map(k=>`${k}`), ACTS, 'descr');
+        fillDatalist('dlRecursos', [...recKeys].sort(), recLabels, 'nombre');
+        fillDatalist('dlTecnicos', [...tecs].sort());
+
+        $('#loadState').textContent = `${Object.keys(SUERTES).length} suertes · ${Object.keys(ACTS).length} act · ${Object.keys(RECS).length} rec`;
+        $('#loadState').classList.replace('text-slate-500','text-emerald-400');
+        restore();
+      }catch(e){
+        $('#loadState').textContent = 'Error: ' + e.message;
+        $('#loadState').classList.replace('text-slate-500','text-rose-400');
+      }
+    }
+
+    function fillDatalist(id, keys, map, field){
+      const dl = $('#'+id);
+      dl.innerHTML = keys.map(k=>{
+        const label = (map && map[k]) ? `${k} — ${map[k][field]}` : k;
+        return `<option value="${k}">${(map&&map[k])?label:''}</option>`;
+      }).join('');
+    }
+
+    // ---- auto-fill reactivo ----
+    function onSuerte(){
+      const s = SUERTES[$('#fSuerte').value.trim()];
+      $('#fArea').value = s? (s.area||'') : '';
+      $('#fEdad').value = s? (s.edad||'') : '';
+      $('#chipSuerte').textContent = s? `${s.empresa||''}${s.tecnico? ' · '+s.tecnico:''}` : ($('#fSuerte').value? 'Suerte no encontrada':'');
+      $('#chipSuerte').className = 'text-[11px] ' + (s?'text-emerald-400':'text-rose-400');
+      // autocompletar técnico si está vacío
+      if(s && s.tecnico && !$('#hTecnico').value) $('#hTecnico').value = s.tecnico;
+    }
+    function onActividad(){
+      const a = ACTS[$('#fActividad').value.trim()];
+      $('#fUmAct').value = a? (a.um||'') : '';
+      $('#chipActividad').textContent = a? a.descr : ($('#fActividad').value?'Actividad no encontrada':'');
+      $('#chipActividad').className = 'text-[11px] ' + (a?'text-slate-400':'text-rose-400');
+    }
+    function onRecurso(){
+      const code = $('#fRecurso').value.trim();
+      const r = recInfo(code);
+      $('#fUmRec').value = r? (r.um||'') : '';
+      $('#chipRecurso').textContent = r? r.nombre : ($('#fRecurso').value?'Recurso no encontrado':'');
+      $('#chipRecurso').className = 'text-[11px] ' + (r?'text-slate-400':'text-rose-400');
+      // poblar contratistas disponibles para este recurso
+      const sel = $('#fContratista');
+      const prev = sel.value;
+      const propioOpt = (r && r.hasPropio) ? '<option value="">PROPIO</option>' : (CONTR[code]? '<option value="">— elige contratista —</option>' : '<option value="">PROPIO</option>');
+      const opts = [propioOpt];
+      (CONTR[code]||[]).forEach((c,i)=> opts.push(`<option value="${i}">${c.prov} — ${c.contrato}</option>`));
+      sel.innerHTML = opts.join('');
+      sel.value = (CONTR[code] && CONTR[code][prev])? prev : (!r||r.hasPropio||!CONTR[code] ? '' : '0');
+      onContratista();
+    }
+    function onContratista(){
+      const code = $('#fRecurso').value.trim();
+      const r = recInfo(code);
+      const sel = $('#fContratista').value;
+      if(sel===''){
+        if(r && r.hasPropio){ $('#chipContrato').textContent='Precio propio (R&M)'; $('#chipContrato').className='text-[11px] text-slate-500'; }
+        else if(CONTR[code]){ $('#chipContrato').textContent='Recurso contratado · elige contratista'; $('#chipContrato').className='text-[11px] text-amber-400'; }
+        else { $('#chipContrato').textContent=''; }
+      } else {
+        const c = (CONTR[code]||[])[sel];
+        $('#chipContrato').textContent = c? `${c.contrato} · ${fmt(c.tarifa)}/${r?.um||''}` : '';
+        $('#chipContrato').className='text-[11px] text-amber-300/80';
+      }
+      recalcCosto();
+    }
+    function unitPrice(){
+      const code = $('#fRecurso').value.trim();
+      const r = recInfo(code);
+      const sel = $('#fContratista').value;
+      if(sel!=='' && CONTR[code] && CONTR[code][sel]) return { tarifa:CONTR[code][sel].tarifa, propio:false };
+      return { tarifa: r? r.propioTarifa : 0, propio:true };
+    }
+    function recalcCosto(){
+      const p = unitPrice();
+      const cant = num($('#fCantRec').value);
+      $('#fCosto').value = recInfo($('#fRecurso').value.trim())? fmt(cant * p.tarifa) : '';
+    }
+
+    ['fSuerte'].forEach(id=>$('#'+id).addEventListener('input', onSuerte));
+    $('#fActividad').addEventListener('input', onActividad);
+    $('#fRecurso').addEventListener('input', onRecurso);
+    $('#fContratista').addEventListener('change', onContratista);
+    $('#fCantRec').addEventListener('input', recalcCosto);
+
+    // ---- agregar línea ----
+    $('#btnAdd').addEventListener('click', ()=>{
+      const msg = $('#formMsg'); msg.textContent='';
+      const suerte=$('#fSuerte').value.trim(), act=$('#fActividad').value.trim(), rec=$('#fRecurso').value.trim();
+      if(!suerte||!act||!rec){ msg.textContent='Terreno, Actividad y Recurso son obligatorios.'; return; }
+      if(!SUERTES[suerte]){ msg.textContent='Suerte no existe en el maestro.'; return; }
+      if(!ACTS[act]){ msg.textContent='Actividad no existe.'; return; }
+      const ri = recInfo(rec);
+      if(!ri){ msg.textContent='Recurso no existe.'; return; }
+      const sel=$('#fContratista').value;
+      if(sel==='' && !ri.hasPropio && CONTR[rec]){ msg.textContent='Este recurso es contratado: elige un contratista.'; return; }
+      const c = (sel!==''&&CONTR[rec])? CONTR[rec][sel] : null;
+      const p = unitPrice();
+      const cantRec = num($('#fCantRec').value);
+      ROWS.push({
+        suerte, area:SUERTES[suerte].area, edad:SUERTES[suerte].edad,
+        act, actDescr:ACTS[act].descr, umAct:ACTS[act].um, cantAct:num($('#fCantAct').value),
+        rec, recNombre:ri.nombre, umRec:ri.um, cantRec,
+        contratista: c? c.prov : '', contrato: c? c.contrato : '',
+        propio: p.propio ? 'PROPIO' : rec,
+        tarifa: p.tarifa, costo: cantRec * p.tarifa,
+        obs: $('#fObs').value.trim()
+      });
+      persist(); render(); clearForm(true);
+      $('#fSuerte').focus();
+    });
+
+    function clearForm(keepSuerte){
+      ['fActividad','fCantAct','fRecurso','fCantRec','fObs'].forEach(id=>$('#'+id).value='');
+      if(!keepSuerte){ $('#fSuerte').value=''; onSuerte(); }
+      $('#fContratista').innerHTML='<option value="">PROPIO</option>';
+      ['fUmAct','fUmRec','fCosto'].forEach(id=>$('#'+id).value='');
+      ['chipActividad','chipRecurso','chipContrato'].forEach(id=>$('#'+id).textContent='');
+    }
+    $('#btnClearForm').addEventListener('click', ()=>clearForm(false));
+
+    function render(){
+      const tb=$('#tbody'); tb.innerHTML='';
+      let total=0;
+      ROWS.forEach((r,i)=>{
+        total+=r.costo;
+        const tr=document.createElement('tr');
+        tr.className='border-b border-white/5 hover:bg-white/[0.03]';
+        tr.innerHTML=`
+          <td class="py-2 pr-3 text-white font-medium">${r.suerte}</td>
+          <td class="py-2 pr-3 text-right text-slate-400">${r.area}</td>
+          <td class="py-2 pr-3 text-right text-slate-400">${r.edad}</td>
+          <td class="py-2 pr-3"><span class="text-slate-200">${r.act}</span> <span class="text-slate-500">${r.actDescr}</span></td>
+          <td class="py-2 pr-3 text-right text-slate-300">${r.cantAct||''}</td>
+          <td class="py-2 pr-3"><span class="text-slate-200">${r.rec}</span> <span class="text-slate-500">${r.recNombre}</span></td>
+          <td class="py-2 pr-3 text-right text-slate-300">${r.cantRec||''}</td>
+          <td class="py-2 pr-3 ${r.contratista?'text-sky-300':'text-slate-500'}">${r.contratista||'PROPIO'}</td>
+          <td class="py-2 pr-3 text-slate-400">${r.contrato||'—'}</td>
+          <td class="py-2 pr-3 text-right text-amber-300 font-medium">${fmt(r.costo)}</td>
+          <td class="py-2 text-right"><button data-i="${i}" class="del text-slate-500 hover:text-rose-400" aria-label="Eliminar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button></td>`;
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll('.del').forEach(b=>b.addEventListener('click',()=>{ ROWS.splice(+b.dataset.i,1); persist(); render(); }));
+      $('#totalCost').textContent=fmt(total);
+      $('#rowCount').textContent=ROWS.length? `(${ROWS.length})`:'';
+      $('#emptyRows').style.display=ROWS.length? 'none':'block';
+    }
+
+    function persist(){ try{ localStorage.setItem(LS_KEY, JSON.stringify({sem:$('#hSemana').value,tec:$('#hTecnico').value,rows:ROWS})); }catch(e){} }
+    function restore(){
+      try{
+        const d=JSON.parse(localStorage.getItem(LS_KEY)||'{}');
+        if(d.sem)$('#hSemana').value=d.sem; if(d.tec)$('#hTecnico').value=d.tec;
+        if(Array.isArray(d.rows))ROWS=d.rows;
+      }catch(e){}
+      render();
+    }
+    $('#hSemana').addEventListener('input',persist); $('#hTecnico').addEventListener('input',persist);
+
+    // ---- export CSV (orden hoja anexa) ----
+    $('#btnExport').addEventListener('click', ()=>{
+      if(!ROWS.length){ alert('No hay líneas para exportar.'); return; }
+      const head=['Semana','Tecnico','Terreno','Area (Ha)','Edad','Cod. Actividad','Descr. Actividad','UM. Actividad','Cant. Act','Cod. Recurso/Material','Descr. Recurso/Material','UM Recurso/Material','Cantidad Recurso/Material','Contratista','Contrato','Concatenar recurso-contratista','Concatenar','Costo promedio','Observaciones'];
+      const sem=$('#hSemana').value, tec=$('#hTecnico').value;
+      const esc=v=>{ v=String(v==null?'':v); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+      const lines=[head.join(';')];
+      ROWS.forEach(r=>lines.push([sem,tec,r.suerte,r.area,r.edad,r.act,r.actDescr,r.umAct,r.cantAct,r.rec,r.recNombre,r.umRec,r.cantRec,r.contratista,r.contrato,r.rec+r.contratista,r.propio,Math.round(r.costo),r.obs].map(esc).join(';')));
+      const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+      a.download=`Programacion_anexa_sem${sem||''}_${(tec||'').replace(/\s+/g,'_')||'orden'}.csv`;
+      a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    init();
+  </script>
+</body>
+</html>
